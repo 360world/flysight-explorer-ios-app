@@ -1,0 +1,22 @@
+// Base.xcconfig — shared build settings for the app and its test target.
+//
+// These are the values used for the official App Store build published by
+// 360world. They are NOT secrets (team IDs and bundle IDs are public), but
+// you cannot sign with them unless you are a member of that team.
+//
+// Contributors: copy Config/Local.xcconfig.example to Config/Local.xcconfig
+// (git-ignored) and put your own team ID and a unique bundle ID there.
+// Simulator builds need no changes at all.
+
+APP_BUNDLE_ID = com.world360.flysightexplorer
+DEVELOPMENT_TEAM = 94J6N6TEVZ
+
+PRODUCT_BUNDLE_IDENTIFIER = $(APP_BUNDLE_ID)
+
+// Release CI overrides both from the git tag / TestFlight; keep these as
+// sensible local defaults.
+MARKETING_VERSION = 1.0
+CURRENT_PROJECT_VERSION = 1
+
+// Optional per-developer overrides (must stay last).
+#include? "Local.xcconfig"

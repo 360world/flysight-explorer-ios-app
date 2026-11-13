@@ -1,0 +1,8 @@
+// Copy this file to Config/Local.xcconfig (it is git-ignored) to build and
+// run on your own iPhone with your own Apple ID / developer team.
+//
+// Your Team ID: Xcode → Settings → Accounts → select team, or
+// developer.apple.com → Account → Membership details.
+
+DEVELOPMENT_TEAM = YOURTEAMID
+APP_BUNDLE_ID = com.yourname.flysightexplorer

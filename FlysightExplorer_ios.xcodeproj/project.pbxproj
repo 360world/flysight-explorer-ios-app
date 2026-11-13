@@ -6,14 +6,31 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXContainerItemProxy section */
+		9B66A648302B978100B0C647 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 9B66A61E302B978100B0C647 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 9B66A625302B978100B0C647;
+			remoteInfo = FlysightExplorer_ios;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		9B66A626302B978100B0C647 /* FlysightExplorer_ios.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FlysightExplorer_ios.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		9B66A640302B978100B0C647 /* Base.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Base.xcconfig; sourceTree = "<group>"; };
+		9B66A642302B978100B0C647 /* FlysightExplorer_iosTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FlysightExplorer_iosTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		9B66A628302B978100B0C647 /* FlysightExplorer_ios */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = FlysightExplorer_ios;
+			sourceTree = "<group>";
+		};
+		9B66A643302B978100B0C647 /* FlysightExplorer_iosTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = FlysightExplorer_iosTests;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -26,13 +43,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		9B66A645302B978100B0C647 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		9B66A61D302B978100B0C647 = {
 			isa = PBXGroup;
 			children = (
+				9B66A641302B978100B0C647 /* Config */,
 				9B66A628302B978100B0C647 /* FlysightExplorer_ios */,
+				9B66A643302B978100B0C647 /* FlysightExplorer_iosTests */,
 				9B66A627302B978100B0C647 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -41,8 +67,17 @@
 			isa = PBXGroup;
 			children = (
 				9B66A626302B978100B0C647 /* FlysightExplorer_ios.app */,
+				9B66A642302B978100B0C647 /* FlysightExplorer_iosTests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		9B66A641302B978100B0C647 /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				9B66A640302B978100B0C647 /* Base.xcconfig */,
+			);
+			path = Config;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -70,6 +105,29 @@
 			productReference = 9B66A626302B978100B0C647 /* FlysightExplorer_ios.app */;
 			productType = "com.apple.product-type.application";
 		};
+		9B66A647302B978100B0C647 /* FlysightExplorer_iosTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 9B66A64A302B978100B0C647 /* Build configuration list for PBXNativeTarget "FlysightExplorer_iosTests" */;
+			buildPhases = (
+				9B66A644302B978100B0C647 /* Sources */,
+				9B66A645302B978100B0C647 /* Frameworks */,
+				9B66A646302B978100B0C647 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				9B66A649302B978100B0C647 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				9B66A643302B978100B0C647 /* FlysightExplorer_iosTests */,
+			);
+			name = FlysightExplorer_iosTests;
+			packageProductDependencies = (
+			);
+			productName = FlysightExplorer_iosTests;
+			productReference = 9B66A642302B978100B0C647 /* FlysightExplorer_iosTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -82,6 +140,10 @@
 				TargetAttributes = {
 					9B66A625302B978100B0C647 = {
 						CreatedOnToolsVersion = 26.6;
+					};
+					9B66A647302B978100B0C647 = {
+						CreatedOnToolsVersion = 26.6;
+						TestTargetID = 9B66A625302B978100B0C647;
 					};
 				};
 			};
@@ -100,12 +162,20 @@
 			projectRoot = "";
 			targets = (
 				9B66A625302B978100B0C647 /* FlysightExplorer_ios */,
+				9B66A647302B978100B0C647 /* FlysightExplorer_iosTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		9B66A624302B978100B0C647 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9B66A646302B978100B0C647 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -122,7 +192,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		9B66A644302B978100B0C647 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		9B66A649302B978100B0C647 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 9B66A625302B978100B0C647 /* FlysightExplorer_ios */;
+			targetProxy = 9B66A648302B978100B0C647 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		9B66A62F302B978400B0C647 /* Debug */ = {
@@ -246,17 +331,17 @@
 		};
 		9B66A632302B978400B0C647 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 9B66A640302B978100B0C647 /* Base.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 94J6N6TEVZ;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "FlySight Explorer";
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
-				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "connecto to flysight";
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "FlySight Explorer uses Bluetooth to connect to your FlySight 2, download your jumps and change its settings.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UIFileSharingEnabled = YES;
@@ -267,8 +352,6 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.example.flysightexplorer;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -282,17 +365,17 @@
 		};
 		9B66A633302B978400B0C647 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 9B66A640302B978100B0C647 /* Base.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 94J6N6TEVZ;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "FlySight Explorer";
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
-				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "connecto to flysight";
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "FlySight Explorer uses Bluetooth to connect to your FlySight 2, download your jumps and change its settings.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UIFileSharingEnabled = YES;
@@ -303,8 +386,6 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.example.flysightexplorer;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
@@ -313,6 +394,44 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		9B66A64B302B978100B0C647 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 9B66A640302B978100B0C647 /* Base.xcconfig */;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(APP_BUNDLE_ID).tests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/FlysightExplorer_ios.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/FlysightExplorer_ios";
+			};
+			name = Debug;
+		};
+		9B66A64C302B978100B0C647 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 9B66A640302B978100B0C647 /* Base.xcconfig */;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				GENERATE_INFOPLIST_FILE = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = "$(APP_BUNDLE_ID).tests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/FlysightExplorer_ios.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/FlysightExplorer_ios";
 			};
 			name = Release;
 		};
@@ -333,6 +452,15 @@
 			buildConfigurations = (
 				9B66A632302B978400B0C647 /* Debug */,
 				9B66A633302B978400B0C647 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		9B66A64A302B978100B0C647 /* Build configuration list for PBXNativeTarget "FlysightExplorer_iosTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				9B66A64B302B978100B0C647 /* Debug */,
+				9B66A64C302B978100B0C647 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

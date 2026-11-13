@@ -1,0 +1,8 @@
+# Signing certificates and profiles live encrypted in a PRIVATE git repo.
+# The URL and decryption password come from the environment, never from here:
+#   MATCH_GIT_URL      git@github.com:<org>/<private-certs-repo>.git
+#   MATCH_PASSWORD     passphrase used to encrypt that repo
+storage_mode("git")
+git_url(ENV.fetch("MATCH_GIT_URL"))
+type("appstore")
+app_identifier(["com.world360.flysightexplorer"])

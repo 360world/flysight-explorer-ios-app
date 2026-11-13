@@ -1,0 +1,7 @@
+# Changes to CI, release automation and signing config need maintainer review.
+/.github/      @pAlkesz
+/fastlane/     @pAlkesz
+/Config/       @pAlkesz
+/Gemfile       @pAlkesz
+/Gemfile.lock  @pAlkesz
+/FlysightExplorer_ios.xcodeproj/  @pAlkesz
