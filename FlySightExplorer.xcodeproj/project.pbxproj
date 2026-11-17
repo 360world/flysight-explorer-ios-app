@@ -12,25 +12,25 @@
 			containerPortal = 9B66A61E302B978100B0C647 /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = 9B66A625302B978100B0C647;
-			remoteInfo = FlysightExplorer_ios;
+			remoteInfo = FlySightExplorer;
 		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		9B66A626302B978100B0C647 /* FlysightExplorer_ios.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FlysightExplorer_ios.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		9B66A626302B978100B0C647 /* FlySightExplorer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FlySightExplorer.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		9B66A640302B978100B0C647 /* Base.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Base.xcconfig; sourceTree = "<group>"; };
-		9B66A642302B978100B0C647 /* FlysightExplorer_iosTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FlysightExplorer_iosTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		9B66A642302B978100B0C647 /* FlySightExplorerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FlySightExplorerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		9B66A628302B978100B0C647 /* FlysightExplorer_ios */ = {
+		9B66A628302B978100B0C647 /* FlySightExplorer */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = FlysightExplorer_ios;
+			path = FlySightExplorer;
 			sourceTree = "<group>";
 		};
-		9B66A643302B978100B0C647 /* FlysightExplorer_iosTests */ = {
+		9B66A643302B978100B0C647 /* FlySightExplorerTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = FlysightExplorer_iosTests;
+			path = FlySightExplorerTests;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -57,8 +57,8 @@
 			isa = PBXGroup;
 			children = (
 				9B66A641302B978100B0C647 /* Config */,
-				9B66A628302B978100B0C647 /* FlysightExplorer_ios */,
-				9B66A643302B978100B0C647 /* FlysightExplorer_iosTests */,
+				9B66A628302B978100B0C647 /* FlySightExplorer */,
+				9B66A643302B978100B0C647 /* FlySightExplorerTests */,
 				9B66A627302B978100B0C647 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -66,8 +66,8 @@
 		9B66A627302B978100B0C647 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				9B66A626302B978100B0C647 /* FlysightExplorer_ios.app */,
-				9B66A642302B978100B0C647 /* FlysightExplorer_iosTests.xctest */,
+				9B66A626302B978100B0C647 /* FlySightExplorer.app */,
+				9B66A642302B978100B0C647 /* FlySightExplorerTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -83,9 +83,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		9B66A625302B978100B0C647 /* FlysightExplorer_ios */ = {
+		9B66A625302B978100B0C647 /* FlySightExplorer */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 9B66A631302B978400B0C647 /* Build configuration list for PBXNativeTarget "FlysightExplorer_ios" */;
+			buildConfigurationList = 9B66A631302B978400B0C647 /* Build configuration list for PBXNativeTarget "FlySightExplorer" */;
 			buildPhases = (
 				9B66A622302B978100B0C647 /* Sources */,
 				9B66A623302B978100B0C647 /* Frameworks */,
@@ -96,18 +96,18 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				9B66A628302B978100B0C647 /* FlysightExplorer_ios */,
+				9B66A628302B978100B0C647 /* FlySightExplorer */,
 			);
-			name = FlysightExplorer_ios;
+			name = FlySightExplorer;
 			packageProductDependencies = (
 			);
-			productName = FlysightExplorer_ios;
-			productReference = 9B66A626302B978100B0C647 /* FlysightExplorer_ios.app */;
+			productName = FlySightExplorer;
+			productReference = 9B66A626302B978100B0C647 /* FlySightExplorer.app */;
 			productType = "com.apple.product-type.application";
 		};
-		9B66A647302B978100B0C647 /* FlysightExplorer_iosTests */ = {
+		9B66A647302B978100B0C647 /* FlySightExplorerTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 9B66A64A302B978100B0C647 /* Build configuration list for PBXNativeTarget "FlysightExplorer_iosTests" */;
+			buildConfigurationList = 9B66A64A302B978100B0C647 /* Build configuration list for PBXNativeTarget "FlySightExplorerTests" */;
 			buildPhases = (
 				9B66A644302B978100B0C647 /* Sources */,
 				9B66A645302B978100B0C647 /* Frameworks */,
@@ -119,13 +119,13 @@
 				9B66A649302B978100B0C647 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				9B66A643302B978100B0C647 /* FlysightExplorer_iosTests */,
+				9B66A643302B978100B0C647 /* FlySightExplorerTests */,
 			);
-			name = FlysightExplorer_iosTests;
+			name = FlySightExplorerTests;
 			packageProductDependencies = (
 			);
-			productName = FlysightExplorer_iosTests;
-			productReference = 9B66A642302B978100B0C647 /* FlysightExplorer_iosTests.xctest */;
+			productName = FlySightExplorerTests;
+			productReference = 9B66A642302B978100B0C647 /* FlySightExplorerTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
 /* End PBXNativeTarget section */
@@ -147,7 +147,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 9B66A621302B978100B0C647 /* Build configuration list for PBXProject "FlysightExplorer_ios" */;
+			buildConfigurationList = 9B66A621302B978100B0C647 /* Build configuration list for PBXProject "FlySightExplorer" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -161,8 +161,8 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				9B66A625302B978100B0C647 /* FlysightExplorer_ios */,
-				9B66A647302B978100B0C647 /* FlysightExplorer_iosTests */,
+				9B66A625302B978100B0C647 /* FlySightExplorer */,
+				9B66A647302B978100B0C647 /* FlySightExplorerTests */,
 			);
 		};
 /* End PBXProject section */
@@ -204,7 +204,7 @@
 /* Begin PBXTargetDependency section */
 		9B66A649302B978100B0C647 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 9B66A625302B978100B0C647 /* FlysightExplorer_ios */;
+			target = 9B66A625302B978100B0C647 /* FlySightExplorer */;
 			targetProxy = 9B66A648302B978100B0C647 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -412,7 +412,7 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/FlysightExplorer_ios.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/FlysightExplorer_ios";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/FlySightExplorer.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/FlySightExplorer";
 			};
 			name = Debug;
 		};
@@ -431,14 +431,14 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/FlysightExplorer_ios.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/FlysightExplorer_ios";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/FlySightExplorer.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/FlySightExplorer";
 			};
 			name = Release;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		9B66A621302B978100B0C647 /* Build configuration list for PBXProject "FlysightExplorer_ios" */ = {
+		9B66A621302B978100B0C647 /* Build configuration list for PBXProject "FlySightExplorer" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				9B66A62F302B978400B0C647 /* Debug */,
@@ -447,7 +447,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		9B66A631302B978400B0C647 /* Build configuration list for PBXNativeTarget "FlysightExplorer_ios" */ = {
+		9B66A631302B978400B0C647 /* Build configuration list for PBXNativeTarget "FlySightExplorer" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				9B66A632302B978400B0C647 /* Debug */,
@@ -456,7 +456,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		9B66A64A302B978100B0C647 /* Build configuration list for PBXNativeTarget "FlysightExplorer_iosTests" */ = {
+		9B66A64A302B978100B0C647 /* Build configuration list for PBXNativeTarget "FlySightExplorerTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				9B66A64B302B978100B0C647 /* Debug */,

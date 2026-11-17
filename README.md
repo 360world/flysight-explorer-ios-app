@@ -20,8 +20,8 @@ kártyaolvasó és számítógép nélkül.*
 
 Requirements: Xcode 26.5 or newer, iOS 26.5 SDK.
 
-1. Clone the repo and open `FlysightExplorer_ios.xcodeproj`.
-2. **Simulator:** select the `FlysightExplorer_ios` scheme and run. No signing setup needed.
+1. Clone the repo and open `FlySightExplorer.xcodeproj`.
+2. **Simulator:** select the `FlySightExplorer` scheme and run. No signing setup needed.
 3. **Your own iPhone** (needed for Bluetooth):
    ```bash
    cp Config/Local.xcconfig.example Config/Local.xcconfig
@@ -33,7 +33,7 @@ Requirements: Xcode 26.5 or newer, iOS 26.5 SDK.
 Run the unit tests with **⌘U** in Xcode, or:
 
 ```bash
-xcodebuild test -project FlysightExplorer_ios.xcodeproj -scheme FlysightExplorer_ios \
+xcodebuild test -project FlySightExplorer.xcodeproj -scheme FlySightExplorer \
   -destination 'platform=iOS Simulator,name=iPhone 17' CODE_SIGNING_ALLOWED=NO
 ```
 

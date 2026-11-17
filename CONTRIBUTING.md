@@ -8,7 +8,7 @@ Thanks for helping! Bug reports, feature ideas and pull requests are all welcome
 2. Follow the build steps in the [README](README.md). Put your signing team and
    bundle ID in `Config/Local.xcconfig` — **do not** change `DEVELOPMENT_TEAM`,
    bundle IDs or signing settings in the Xcode project or `Config/Base.xcconfig`.
-3. Make your change. Add or update tests in `FlysightExplorer_iosTests/` when
+3. Make your change. Add or update tests in `FlySightExplorerTests/` when
    you touch parsing, analysis or other logic that can be tested without a device.
 4. Run the tests (⌘U) before opening a PR.
 

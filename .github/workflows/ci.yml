@@ -40,8 +40,8 @@ jobs:
         run: |
           set -o pipefail
           xcodebuild test \
-            -project FlysightExplorer_ios.xcodeproj \
-            -scheme FlysightExplorer_ios \
+            -project FlySightExplorer.xcodeproj \
+            -scheme FlySightExplorer \
             -destination "platform=iOS Simulator,id=${{ steps.sim.outputs.udid }}" \
             -resultBundlePath TestResults.xcresult \
             CODE_SIGNING_ALLOWED=NO
