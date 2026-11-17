@@ -1,0 +1,42 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "CFBundleDisplayName" : {
+      "comment" : "App name shown under the icon on the Home Screen",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FlySight Explorer"
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FlySight Explorer"
+          }
+        }
+      }
+    },
+    "NSBluetoothAlwaysUsageDescription" : {
+      "comment" : "Shown by iOS when the app first asks for Bluetooth access",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "FlySight Explorer uses Bluetooth to connect to your FlySight 2, download your jumps and change its settings."
+          }
+        },
+        "hu" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A FlySight Explorer Bluetooth-on kapcsolódik a FlySight 2-höz, hogy letöltse az ugrásaidat és módosítsa a beállításait."
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

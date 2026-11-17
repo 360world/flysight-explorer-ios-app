@@ -22,7 +22,8 @@ Thanks for helping! Bug reports, feature ideas and pull requests are all welcome
 - CI must pass. A maintainer will review; changes to `.github/`, `fastlane/`
   and `Config/` need a maintainer from CODEOWNERS.
 - User-facing strings live in `Localization.swift`; please add both the
-  Hungarian (`hu`) and English (`en`) text.
+  Hungarian (`hu`) and English (`en`) text. Texts iOS shows for the app
+  (permission prompts, app name) are in `FlySightExplorer/InfoPlist.xcstrings`.
 
 ## Reporting bugs
 

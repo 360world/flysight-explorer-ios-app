@@ -234,6 +234,12 @@ A dictionary of 112 keys, Hungarian and English. The configurator's texts
 schema as bilingual values and are resolved at display time. The `CONFIG.TXT`
 keys are byte-identical; the file format is not touched.
 
+On first launch the app uses the phone's language (Hungarian if that is the
+preferred language, English otherwise) until the user picks one in Settings;
+the choice is stored under `app_language`. The texts iOS itself shows — the
+Bluetooth permission prompt and the app name — are translated in
+`InfoPlist.xcstrings`.
+
 ---
 
 ## 9. Open questions

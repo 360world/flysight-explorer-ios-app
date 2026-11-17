@@ -8,7 +8,7 @@ device — all from your phone, no card reader or computer needed.
 
 > The pictures below are schematic mockups drawn from the code, not
 > screenshots, and they show the Hungarian interface. The real app may differ
-> in small details. The app can be switched between English and Hungarian.
+> in small details. The app is available in English and Hungarian.
 
 ## Typical workflow
 
@@ -77,6 +77,8 @@ The tab bar has five tabs: **HUD**, **Analysis**, **Logbook**, **Settings**,
 
 <img src="images/settings.png" alt="Settings tab" width="280">
 
+- Language picker (English / Magyar) at the top. Until you pick one, the app
+  follows your phone's language.
 - The complete `CONFIG.TXT`: 9 groups, 31 fields.
 - Every field has an explanation and its unit.
 - Alarm altitudes are relative to the dropzone's elevation: if the dropzone is

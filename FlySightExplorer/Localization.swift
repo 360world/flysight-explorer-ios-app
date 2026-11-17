@@ -2,7 +2,7 @@
 //  Localization.swift
 //  Egyszerű, kézzel karbantartott fordítási réteg magyar/angol nyelvhez.
 //
-//  Használat: @AppStorage("app_language") private var appLang = AppLanguage.hu.rawValue
+//  Használat: @AppStorage("app_language") private var appLang = AppLanguage.systemDefault.rawValue
 //             Text(loc("tab.hud", appLang))
 //
 //  Miért nem Xcode String Catalog: a projekt egyfájlos/kevés-fájlos, kézzel
@@ -23,6 +23,12 @@ enum AppLanguage: String, CaseIterable, Identifiable {
     var id: String { rawValue }
     var label: String { self == .hu ? "Magyar" : "English" }
     var flag: String { self == .hu ? "🇭🇺" : "🇬🇧" }
+
+    /// Language used until the user picks one in Settings: Hungarian if it is
+    /// the phone's preferred language, English otherwise.
+    static var systemDefault: AppLanguage {
+        Locale.preferredLanguages.first?.hasPrefix("hu") == true ? .hu : .en
+    }
 }
 
 /// Kulcs -> [nyelv: szöveg]. Ha egy kulcs vagy nyelv hiányzik, a kulcs

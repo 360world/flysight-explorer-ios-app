@@ -87,7 +87,7 @@ final class AppModel: ObservableObject {
             }
         }
         ble.onUploadFinished = { [weak self] ok, name in
-            let en = (self?.lang ?? "hu") == "en"
+            let en = (self?.lang ?? AppLanguage.systemDefault.rawValue) == "en"
             self?.toast = ok ? (en ? "\(name) uploaded to device"
                                    : "\(name) feltöltve az eszközre")
                              : (en ? "Upload failed" : "A feltöltés nem sikerült")
@@ -104,7 +104,7 @@ final class AppModel: ObservableObject {
     /// Az aktuális nyelv — ugyanaz a kulcs, amit a nézetek @AppStorage-dzsal
     /// olvasnak. Az AppModel nem View, ezért közvetlenül a UserDefaults-ból.
     var lang: String {
-        UserDefaults.standard.string(forKey: "app_language") ?? "hu"
+        UserDefaults.standard.string(forKey: "app_language") ?? AppLanguage.systemDefault.rawValue
     }
 
     func loadSample(_ s: SampleTrack, _ lang: String = "hu") {
@@ -742,7 +742,7 @@ struct HUDTab: View {
     @AppStorage("hud_palette") private var paletteRaw = HUDPalette.color.rawValue
     @AppStorage("hud_altref") private var altRefRaw = AltRef.agl.rawValue
     @AppStorage("hud_map") private var showMap = true
-    @AppStorage("app_language") private var appLang = AppLanguage.hu.rawValue
+    @AppStorage("app_language") private var appLang = AppLanguage.systemDefault.rawValue
     @State private var showControls = true
 
     private var layout: HUDLayout { .init(rawValue: layoutRaw) ?? .glideFirst }
@@ -858,7 +858,7 @@ struct HUDTab: View {
 struct AnalysisTab: View {
     @ObservedObject var m: AppModel
     @ObservedObject var logbook: Logbook
-    @AppStorage("app_language") private var appLang = AppLanguage.hu.rawValue
+    @AppStorage("app_language") private var appLang = AppLanguage.systemDefault.rawValue
     @State private var series: SeriesToggles = [.altitude, .vertical, .horizontal]
     @State private var showPicker = false
 
@@ -1142,7 +1142,7 @@ struct AnalysisTab: View {
 struct LogbookTab: View {
     @ObservedObject var m: AppModel
     @ObservedObject var logbook: Logbook
-    @AppStorage("app_language") private var appLang = AppLanguage.hu.rawValue
+    @AppStorage("app_language") private var appLang = AppLanguage.systemDefault.rawValue
     @State private var renaming: LogEntry?
     @State private var newName = ""
     @State private var showImporter = false
@@ -1293,7 +1293,7 @@ struct ConfigTab: View {
     @ObservedObject var m: AppModel
     @ObservedObject var config: FlySightConfig
     @ObservedObject var ble: FlySightBLE
-    @AppStorage("app_language") private var appLang = AppLanguage.hu.rawValue
+    @AppStorage("app_language") private var appLang = AppLanguage.systemDefault.rawValue
     @State private var showRaw = false
     @State private var confirmUpload = false
 
@@ -1508,7 +1508,7 @@ struct FlySightTab: View {
     @ObservedObject var ble: FlySightBLE
     /// Kell a figyeléshez, hogy a "már letöltve" jelzés azonnal frissüljön.
     @ObservedObject var logbook: Logbook
-    @AppStorage("app_language") private var appLang = AppLanguage.hu.rawValue
+    @AppStorage("app_language") private var appLang = AppLanguage.systemDefault.rawValue
     @State private var renamingDevice: FlySightDevice?
     @State private var deviceNickname = ""
 
@@ -1751,7 +1751,7 @@ struct FlySightTab: View {
 
 struct DiagnosticsView: View {
     @ObservedObject private var diag = DiagLog.shared
-    @AppStorage("app_language") private var appLang = AppLanguage.hu.rawValue
+    @AppStorage("app_language") private var appLang = AppLanguage.systemDefault.rawValue
     @State private var copied = false
 
     var body: some View {
@@ -1810,7 +1810,7 @@ struct DiagnosticsView: View {
 
 struct ContentView: View {
     @StateObject private var m = AppModel()
-    @AppStorage("app_language") private var appLang = AppLanguage.hu.rawValue
+    @AppStorage("app_language") private var appLang = AppLanguage.systemDefault.rawValue
 
     var body: some View {
         TabView {

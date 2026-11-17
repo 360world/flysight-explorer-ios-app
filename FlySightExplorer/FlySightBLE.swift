@@ -251,7 +251,7 @@ final class FlySightBLE: NSObject, ObservableObject {
     /// Kétnyelvű felhasználói szöveg. A NAPLÓ mindig angol, ez csak a
     /// felhasználónak megjelenő hibaüzenetekre és állapotokra kell.
     private var lang: String {
-        UserDefaults.standard.string(forKey: "app_language") ?? "hu"
+        UserDefaults.standard.string(forKey: "app_language") ?? AppLanguage.systemDefault.rawValue
     }
     private func L(_ hu: String, _ en: String) -> String { lang == "en" ? en : hu }
 

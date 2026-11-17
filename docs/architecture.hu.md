@@ -224,6 +224,12 @@ mező, súgók, legördülők) nem kulcsalapúak, hanem kétnyelvű értékként
 élnek, és megjelenítéskor oldódnak fel. A `CONFIG.TXT` kulcsai bájtazonosak, a
 fájlformátumhoz nem nyúlunk.
 
+Első indításkor az app a telefon nyelvét használja (magyar, ha az a
+preferált nyelv, különben angol), amíg a felhasználó a Beállításokban nem
+választ; a választás az `app_language` kulcson tárolódik. Az iOS által
+megjelenített szövegek — a Bluetooth-engedélykérés és az app neve — az
+`InfoPlist.xcstrings` fájlban vannak lefordítva.
+
 ---
 
 ## 9. Nyitott kérdések
