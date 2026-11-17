@@ -11,7 +11,10 @@ no card reader or computer needed.
 elemzés, HUD-megjelenítés és az eszköz konfigurálása — mindezt a telefonról,
 kártyaolvasó és számítógép nélkül.*
 
-Technical overview (Hungarian): [ARCHITEKTURA.md](ARCHITEKTURA.md)
+## Documentation
+
+- **User guide:** [English](docs/user-guide.md) · [Magyar](docs/user-guide.hu.md)
+- **Technical overview** (Hungarian): [ARCHITEKTURA.md](ARCHITEKTURA.md)
 
 ## Building
 

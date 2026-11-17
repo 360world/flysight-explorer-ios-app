@@ -15,6 +15,8 @@ Thanks for helping! Bug reports, feature ideas and pull requests are all welcome
 ## Pull requests
 
 - Keep PRs focused: one fix or feature per PR.
+- Give the PR a clear title, written for users — it ends up in the release
+  notes (e.g. "Fix download stalling on large TRACK.CSV files").
 - Describe what changed and how you tested it (simulator, which iPhone, which
   FlySight firmware). Screenshots help for UI changes.
 - CI must pass. A maintainer will review; changes to `.github/`, `fastlane/`
