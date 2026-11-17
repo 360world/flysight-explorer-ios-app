@@ -1,39 +1,39 @@
 //
 //  FlySightConfig.swift
-//  A CONFIG.TXT olvasása, szerkesztése és visszaírása.
+//  Reading, editing and writing back CONFIG.TXT.
 //
-//  A parser megőrzi a kommenteket és a sorrendet: a fájl olvasható marad,
-//  és a nem ismert kulcsok is érintetlenül átmennek.
+//  The parser preserves comments and ordering: the file stays readable,
+//  and unknown keys pass through untouched.
 //
-//  FONTOS: a Win_Top / Win_Bottom jelentése bizonytalan. A FlySight
-//  dokumentációja szerint ez az a magassági sáv, ahol a hang ENGEDÉLYEZETT,
-//  nem pedig ahol elnémul. Földön, kézzel ellenőrizd, mielőtt ugrásnál
-//  számítasz rá. Az UI ezért figyelmeztetést is megjelenít.
+//  IMPORTANT: the meaning of Win_Top / Win_Bottom is uncertain. According
+//  to the FlySight docs, this is the altitude band where audio is ENABLED,
+//  not where it is muted. Verify it by hand on the ground before relying
+//  on it during a jump. The UI therefore also shows a warning.
 //
 
 import SwiftUI
 import Combine
 
-// MARK: - Fájl reprezentáció
+// MARK: - File representation
 
-/// Egy sor a CONFIG.TXT-ben. A komment és üres sorok érintetlenül megmaradnak.
+/// One line in CONFIG.TXT. Comment and blank lines are kept untouched.
 enum ConfigLine {
     case comment(String)
     case blank
     case pair(key: String, value: String, trailingComment: String?)
 }
 
-// MARK: - Kétnyelvű feliratok
+// MARK: - Bilingual labels
 
-/// Kétnyelvű felirat. A konfigurátor szövegei eddig be voltak égetve magyarul,
-/// ezért angol nyelven is magyarul jelentek meg.
+/// Bilingual label. The configurator texts used to be hard-coded in Hungarian,
+/// so they showed up in Hungarian even in English.
 struct CfgText {
     let hu: String
     let en: String
     func t(_ lang: String) -> String { lang == "en" ? en : hu }
 }
 
-// MARK: - Séma
+// MARK: - Schema
 
 enum ConfigKind {
     case int(min: Int, max: Int, step: Int, unit: String)
@@ -57,8 +57,8 @@ struct ConfigGroup: Identifiable {
     var id: String { title.hu }
 }
 
-/// A hangleképezés és a bemondás módjai — a FlySight ugyanezt a listát
-/// használja a Mode, Mode_2 és Sp_Mode kulcsokhoz.
+/// Audio mapping and speech modes — FlySight uses the same list
+/// for the Mode, Mode_2 and Sp_Mode keys.
 let measurementModes: [(Int, CfgText)] = [
     (0, CfgText(hu: "Vízszintes sebesség", en: "Horizontal speed")),
     (1, CfgText(hu: "Függőleges sebesség", en: "Vertical speed")),
@@ -374,11 +374,11 @@ enum ConfigSchema {
     }
 }
 
-// MARK: - Riasztás
+// MARK: - Alarm
 
 struct AlarmEntry: Identifiable, Equatable {
     var id = UUID()
-    var elevation: Int          // méter az ugróhely szintje felett
+    var elevation: Int          // meters above dropzone elevation
     var type: Int               // 0..4
     var file: Int
 
@@ -403,7 +403,7 @@ struct AlarmEntry: Identifiable, Equatable {
     }
 }
 
-// MARK: - Konfiguráció
+// MARK: - Configuration
 
 @MainActor
 final class FlySightConfig: ObservableObject {
@@ -414,9 +414,9 @@ final class FlySightConfig: ObservableObject {
     @Published private(set) var isLoaded = false
     @Published private(set) var sourceName = ""
 
-    /// A beépített alapértelmezett konfigot jelölő sentinel. A nevét NEM
-    /// fordítjuk betöltéskor (különben nyelvváltás után a régi nyelven maradna),
-    /// hanem megjelenítéskor — lásd `displaySourceName`.
+    /// Sentinel marking the built-in default config. Its name is NOT
+    /// translated on load (otherwise it would stay in the old language after a
+    /// language switch) but at display time — see `displaySourceName`.
     static let defaultSourceName = "__default__"
 
     func displaySourceName(_ lang: String) -> String {
@@ -425,7 +425,7 @@ final class FlySightConfig: ObservableObject {
     }
     @Published var isDirty = false
 
-    /// Nem ismert kulcsok, amiket változtatás nélkül visszaírunk
+    /// Unknown keys, written back unchanged
     private var unknown: [String: String] = [:]
 
     func load(_ text: String, name: String) {
@@ -436,7 +436,7 @@ final class FlySightConfig: ObservableObject {
         var pendingType: Int?
         unknown.removeAll()
 
-        // CR sorvég is előfordul az eszköz fájljaiban — lásd Track.parse.
+        // CR line endings also occur in the device's files — see Track.parse.
         for raw in text.split(omittingEmptySubsequences: false, whereSeparator: \.isNewline) {
             let line = String(raw).replacingOccurrences(of: "\r", with: "")
             let trimmed = line.trimmingCharacters(in: .whitespaces)
@@ -444,7 +444,7 @@ final class FlySightConfig: ObservableObject {
             if trimmed.isEmpty { out.append(.blank); continue }
             if trimmed.hasPrefix(";") { out.append(.comment(line)); continue }
 
-            // kulcs: érték  ; komment
+            // key: value  ; comment
             var body = trimmed
             var tail: String?
             if let semi = body.firstIndex(of: ";") {
@@ -460,7 +460,7 @@ final class FlySightConfig: ObservableObject {
 
             out.append(.pair(key: key, value: value, trailingComment: tail))
 
-            // Riasztások: hármas csoportokban követik egymást
+            // Alarms: they follow each other in groups of three
             if key == "Alarm_Elev" { pendingElev = Int(value) }
             else if key == "Alarm_Type" { pendingType = Int(value) }
             else if key == "Alarm_File" {
@@ -508,8 +508,8 @@ final class FlySightConfig: ObservableObject {
         isDirty = true
     }
 
-    /// Visszaírás: a kommentek és a sorrend megmaradnak, csak az értékek
-    /// cserélődnek. A riasztások blokkja a végén újraépül.
+    /// Write-back: comments and ordering are preserved, only the values
+    /// are replaced. The alarm block is rebuilt at the end.
     func serialize() -> String {
         var out: [String] = []
         var written = Set<String>()
@@ -537,14 +537,14 @@ final class FlySightConfig: ObservableObject {
             }
         }
 
-        // Ha eddig nem volt riasztás a fájlban, most a végére kerül
+        // If the file had no alarms so far, they now go at the end
         if !alarmBlockDone && !alarms.isEmpty {
             out.append("")
             out.append("; Riasztasok")
             out.append(contentsOf: alarmBlock())
         }
 
-        // Ismert kulcsok, amik nem voltak a fájlban
+        // Known keys that weren't in the file
         let missing = ConfigSchema.groups.flatMap(\.fields).map(\.key)
             .filter { values[$0] != nil && !written.contains($0) }
         if !missing.isEmpty {
@@ -569,7 +569,7 @@ final class FlySightConfig: ObservableObject {
         return out
     }
 
-    /// Alapértelmezett wingsuit beállítás, ha nincs mit betölteni
+    /// Default wingsuit setup when there is nothing to load
     static func defaultWingsuitText() -> String {
         """
         ; FlySight CONFIG.TXT

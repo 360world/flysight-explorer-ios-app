@@ -1,13 +1,13 @@
 //
 //  Model.swift  —  FlySight HUD + Analyzer
-//  Alap adatmodell: GNSS minta, fázisdetektálás, track, élő motor, HUD beállítások
+//  Core data model: GNSS sample, phase detection, track, live engine, HUD settings
 //
 
 import SwiftUI
 import Combine
 import CoreLocation
 
-// MARK: - GNSS minta
+// MARK: - GNSS sample
 
 struct LiveGNSS: Equatable {
     var lat = 0.0, lon = 0.0, altM = 0.0
@@ -34,7 +34,7 @@ struct LiveGNSS: Equatable {
     var hasFix: Bool { lat != 0 && lon != 0 }
     var coord: CLLocationCoordinate2D { .init(latitude: lat, longitude: lon) }
 
-    /// BLE élő csomag: első bájt bitmaszk, a mezők kötött sorrendben követik
+    /// BLE live packet: first byte is a bitmask, the fields follow in a fixed order
     static func parse(_ data: Data) -> LiveGNSS? {
         guard !data.isEmpty else { return nil }
         let mask = data[0]
@@ -72,7 +72,7 @@ struct LiveGNSS: Equatable {
     }
 }
 
-// MARK: - Repülési fázis
+// MARK: - Flight phase
 
 enum FlightPhase: String {
     case ground, climb, jumpRun, freefall, deploying, canopy, landing
@@ -88,8 +88,8 @@ enum FlightPhase: String {
         }
     }
 
-    /// A rawValue stabil belső azonosító marad (pl. UI állapotgép,
-    /// ForEach id); a felhasználó felé mutatott szöveg mindig ezen megy.
+    /// The rawValue stays a stable internal identifier (e.g. UI state machine,
+    /// ForEach id); user-facing text always goes through this.
     func name(_ lang: String) -> String { loc("phase.\(rawValue)", lang) }
 }
 
@@ -116,15 +116,15 @@ struct Track {
     var landIdx: Int?
     var recordedAt: Date?
 
-    /// Kumulatív megtett útvonal méterben, mintánként. Egyszer számoljuk ki
-    /// betöltéskor, mert a kurzor-kijelző minden mozdulatnál kérné — futásidőben
-    /// újraszámolva több ezer CLLocation-hívás lenne képkockánként.
+    /// Cumulative distance travelled in meters, per sample. Computed once at
+    /// load time, because the cursor readout asks for it on every move —
+    /// recomputing it at runtime would mean thousands of CLLocation calls per frame.
     var cumDistM: [Double] = []
 
     var count: Int { samples.count }
     func agl(_ i: Int) -> Double { samples[i].altM - groundElevation }
 
-    /// Megtett útvonal két index között, méterben.
+    /// Distance travelled between two indices, in meters.
     func distanceM(from a: Int, to b: Int) -> Double {
         guard !cumDistM.isEmpty else { return 0 }
         let lo = min(max(a, 0), cumDistM.count - 1)
@@ -194,7 +194,7 @@ struct Track {
         bands.first { t >= $0.t0 && t <= $0.t1 }?.phase ?? .ground
     }
 
-    /// A nyomvonal fázisonként darabolva, hogy a térképen színezhető legyen
+    /// The track split by phase so it can be colored on the map
     func phaseSegments(_ r: ClosedRange<Int>) -> [(phase: FlightPhase,
                                                    coords: [CLLocationCoordinate2D])] {
         guard !samples.isEmpty else { return [] }
@@ -250,11 +250,11 @@ struct Track {
         return st
     }
 
-    /// A FlySight (és sok más GPS logger) a tört másodperceket néha 2
-    /// tizedesjegyen írja (".00Z", ".20Z"), nem a szokásos 3 jegyen (".000Z").
-    /// Az ISO8601DateFormatter `.withFractionalSeconds` szigorúan 3 jegyet vár,
-    /// ezért ".00Z"-vel némán `nil`-t adna — ez minden sort elutasítana, és a
-    /// fájl "túl rövidnek" tűnne. Ezért 3 jegyre igazítunk elemzés előtt.
+    /// FlySight (and many other GPS loggers) sometimes writes fractional seconds
+    /// with 2 decimal digits (".00Z", ".20Z") instead of the usual 3 (".000Z").
+    /// ISO8601DateFormatter `.withFractionalSeconds` strictly expects 3 digits,
+    /// so with ".00Z" it would silently return `nil` — rejecting every line and
+    /// making the file look "too short". So we pad to 3 digits before parsing.
     private static func normalizeFractionalSeconds(_ s: String) -> String {
         guard let dot = s.firstIndex(of: ".") else { return s }
         let afterDot = s.index(after: dot)
@@ -275,9 +275,9 @@ struct Track {
             ?? fmtNoFrac.date(from: s) ?? fmtNoFrac.date(from: n)
     }
 
-    /// Megmondja, MIÉRT nem sikerült elemezni egy fájlt: hány sor volt, melyik
-    /// formátumra illeszkedett hány sor, és hogy néz ki az első fel nem ismert
-    /// sor. Enélkül a "nem sikerült beolvasni" üzenet semmit nem árul el.
+    /// Explains WHY a file could not be parsed: how many lines it had, how many
+    /// lines matched which format, and what the first unrecognized line looks
+    /// like. Without this, the "could not be read" message tells you nothing.
     static func diagnose(_ text: String) -> String {
         let lines = text.split(whereSeparator: \.isNewline)
         var gnss = 0, iso = 0, num = 0, other = 0
@@ -307,7 +307,7 @@ struct Track {
         return s
     }
 
-    /// A fájl eleje nyersen — ebből azonnal látszik a valódi formátum.
+    /// The raw start of the file — the actual format is immediately visible from it.
     static func head(_ text: String, lines n: Int = 8) -> String {
         text.split(whereSeparator: \.isNewline).prefix(n)
             .map { String($0.prefix(120)) }
@@ -321,18 +321,18 @@ struct Track {
 
         func parseISODate(_ s: String) -> Date? { isoDate(s) }
 
-        // FONTOS: `\.isNewline`-nel darabolunk, nem "\n"-re! A FlySight CSV
-        // fájljai CR (\r) sorvéget használnak, így a "\n"-es darabolás a teljes
-        // 271 kB-os fájlt EGYETLEN sornak látta, és nulla mintát talált —
-        // ezért tűnt minden letöltés "hiányosnak". Az isNewline a \n, \r és
-        // \r\n változatot is helyesen kezeli.
+        // IMPORTANT: we split on `\.isNewline`, not on "\n"! FlySight CSV files
+        // use CR (\r) line endings, so splitting on "\n" saw the entire
+        // 271 kB file as a SINGLE line and found zero samples —
+        // which is why every download looked "incomplete". isNewline correctly
+        // handles \n, \r and \r\n alike.
         for line in text.split(whereSeparator: \.isNewline) {
             let l = line.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !l.isEmpty else { continue }
             let p = l.split(separator: ",", omittingEmptySubsequences: false).map(String.init)
             var g = LiveGNSS()
             if l.hasPrefix("$GNSS,"), p.count >= 12 {
-                // Régi/BLE NMEA-szerű alak: $GNSS,idő,lat,lon,hMSL,velN,velE,velD,hAcc,vAcc,sAcc,gpsFix,numSV
+                // Old/BLE NMEA-like form: $GNSS,time,lat,lon,hMSL,velN,velE,velD,hAcc,vAcc,sAcc,gpsFix,numSV
                 guard let d = parseISODate(p[1]) else { continue }
                 if t0 == nil { t0 = d.timeIntervalSince1970; firstDate = d }
                 g.t = d.timeIntervalSince1970 - t0!
@@ -341,8 +341,8 @@ struct Track {
                 g.vN = Double(p[5]) ?? 0; g.vE = Double(p[6]) ?? 0; g.vD = Double(p[7]) ?? 0
                 g.hAccM = Double(p[8]) ?? 0; g.numSV = Int(p[p.count - 1]) ?? 0
             } else if p.count >= 12, let d = parseISODate(p[0]) {
-                // Valódi FlySight TRACK.CSV: time,lat,lon,hMSL,velN,velE,velD,hAcc,vAcc,sAcc,gpsFix,numSV
-                // (nincs "$GNSS," előtag, a time oszlop ISO8601 dátum, nem másodperc-eltolás).
+                // Real FlySight TRACK.CSV: time,lat,lon,hMSL,velN,velE,velD,hAcc,vAcc,sAcc,gpsFix,numSV
+                // (no "$GNSS," prefix; the time column is an ISO8601 date, not a seconds offset).
                 if t0 == nil { t0 = d.timeIntervalSince1970; firstDate = d }
                 g.t = d.timeIntervalSince1970 - t0!
                 g.lat = Double(p[1]) ?? 0; g.lon = Double(p[2]) ?? 0
@@ -350,7 +350,7 @@ struct Track {
                 g.vN = Double(p[4]) ?? 0; g.vE = Double(p[5]) ?? 0; g.vD = Double(p[6]) ?? 0
                 g.hAccM = Double(p[7]) ?? 0; g.numSV = Int(p[p.count - 1]) ?? 0
             } else if p.count >= 10, let t = Double(p[0]) {
-                // Régi export: másodperc-eltolással kezdődő, "$GNSS," előtag nélküli sor.
+                // Old export: line starting with a seconds offset, without the "$GNSS," prefix.
                 g.t = t
                 g.lat = Double(p[1]) ?? 0; g.lon = Double(p[2]) ?? 0
                 g.altM = Double(p[3]) ?? 0
@@ -359,11 +359,11 @@ struct Track {
             } else { continue }
             out.append(g)
         }
-        // Korábban 50 volt a küszöb (10+ mp 5 Hz-en). Ez néma módon
-        // elutasította a rövid földi teszteket / hamis indításokat,
-        // amik a legtöbb SD kártyán megtalálhatók néhány tucat sorral.
-        // Az elemzés így is működik kevés mintával — exit/deploy egyszerűen
-        // nil marad, ezt a UI már optional-ként kezeli.
+        // The threshold used to be 50 (10+ s at 5 Hz). That silently
+        // rejected short ground tests / false starts, which are found
+        // on most SD cards with a few dozen lines.
+        // Parsing still works with few samples — exit/deploy simply
+        // stays nil, which the UI already handles as optional.
         guard out.count > 5 else { return nil }
         var t = Track(name: name, samples: out)
         t.recordedAt = firstDate
@@ -374,8 +374,8 @@ struct Track {
         return t
     }
 
-    /// A küszöbök a valódi FlySight adatokból: exit -> süllyedés 60 km/h fölé,
-    /// nyitás -> tartósan 40 km/h alá esik.
+    /// Thresholds come from real FlySight data: exit -> descent rises above 60 km/h,
+    /// deployment -> it drops below 40 km/h and stays there.
     mutating func detect() {
         let n = samples.count
         exitIdx = samples.firstIndex { $0.vSpeedKmh > 60 }
@@ -395,7 +395,7 @@ struct Track {
     }
 }
 
-// MARK: - Beépített minták
+// MARK: - Built-in samples
 
 enum SampleTrack: String, CaseIterable, Identifiable {
     case wingsuit = "SAMPLE_WINGSUIT", tracking = "SAMPLE_TRACKING"
@@ -424,7 +424,7 @@ enum SampleTrack: String, CaseIterable, Identifiable {
     }
 }
 
-// MARK: - Élő állapotmotor
+// MARK: - Live state engine
 
 @MainActor
 final class FlightEngine: ObservableObject {
@@ -446,7 +446,7 @@ final class FlightEngine: ObservableObject {
         exitAlt = nil; deployAlt = nil
     }
 
-    /// Egyetlen minta megjelenítése scrub közben
+    /// Display of a single sample while scrubbing
     func show(_ g: LiveGNSS, phase p: FlightPhase, trail newTrail: [CLLocationCoordinate2D]) {
         fix = g
         altAGL = g.altM - groundElevation
@@ -489,7 +489,7 @@ final class FlightEngine: ObservableObject {
     }
 }
 
-// MARK: - HUD beállítások
+// MARK: - HUD settings
 
 enum HUDLayout: String, CaseIterable, Identifiable {
     case altitudeFirst, glideFirst, edgeBar, dial
@@ -541,7 +541,7 @@ enum HUDPalette: String, CaseIterable, Identifiable {
     }
 }
 
-/// Talaj feletti vagy tengerszint feletti magasság
+/// Altitude above ground (AGL) or above sea level (MSL)
 enum AltRef: String, CaseIterable, Identifiable {
     case agl, msl
     var id: String { rawValue }

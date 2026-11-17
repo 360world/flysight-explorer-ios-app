@@ -1,13 +1,13 @@
 //
-//  DiagLog.swift — tartós diagnosztikai napló
+//  DiagLog.swift — persistent diagnostic log
 //
-//  A BLE napló eddig csak a memóriában élt, és sehol nem jelent meg a
-//  felületen: hiba esetén csak egy 3 másodperces toast maradt ("hiányos
-//  fájl"), ami semmit nem árult el. Ez az osztály minden lényeges lépést
-//  fájlba is ír a Documents mappába, így:
-//    - túléli az app újraindítását,
-//    - látszik a Fájlok appban (On My iPhone),
-//    - megosztható / bemásolható hibakereséshez.
+//  The BLE log used to live only in memory and never appeared anywhere in
+//  the UI: on failure all that remained was a 3-second toast ("incomplete
+//  file") that revealed nothing. This class also writes every significant
+//  step to a file in the Documents folder, so that it:
+//    - survives an app restart,
+//    - is visible in the Files app (On My iPhone),
+//    - can be shared / pasted for debugging.
 //
 
 import Foundation
@@ -26,7 +26,7 @@ final class DiagLog: ObservableObject {
     private var docs: URL {
         fm.urls(for: .documentDirectory, in: .userDomainMask)[0]
     }
-    /// A Fájlok appban is látható naplófájl.
+    /// The log file, also visible in the Files app.
     var fileURL: URL { docs.appendingPathComponent("flysight-diagnostics.log") }
 
     private lazy var stamp: DateFormatter = {
@@ -36,13 +36,13 @@ final class DiagLog: ObservableObject {
     }()
 
     private init() {
-        // Induláskor betöltjük a korábbi napló végét, hogy a hiba
-        // visszanézhető legyen akkor is, ha az app közben újraindult.
+        // On startup we load the tail of the previous log so the error
+        // can still be reviewed even if the app has restarted in the meantime.
         if let existing = try? String(contentsOf: fileURL, encoding: .utf8) {
             let all = existing.split(separator: "\n").map(String.init)
             lines = Array(all.suffix(maxLines))
-            // Forgatás: ha a fájl túlnőtte a memóriában tartott mennyiséget,
-            // újraírjuk a végével, hogy ne hízzon korlátlanul.
+            // Rotation: if the file has outgrown what we keep in memory,
+            // rewrite it with just its tail so it doesn't grow without bound.
             if all.count > maxLines {
                 try? lines.joined(separator: "\n")
                     .appending("\n")
@@ -51,11 +51,11 @@ final class DiagLog: ObservableObject {
         }
     }
 
-    /// Egy sor a naplóba. A `cat` a forrás rövid jelölése (BLE, SAVE, PARSE…).
+    /// One line to the log. `cat` is a short tag for the source (BLE, SAVE, PARSE…).
     func log(_ message: String, _ cat: String = "") {
         let prefix = cat.isEmpty ? "" : "[\(cat)] "
-        // A beágyazott sorvégeket kilapítjuk, különben egy bejegyzés több
-        // sorra törik szét a naplófájlban, és nem lehet olvasni.
+        // Flatten embedded line breaks, otherwise a single entry is split across
+        // several lines in the log file and becomes unreadable.
         let flat = message.split(whereSeparator: \.isNewline).joined(separator: " ⏎ ")
         let line = "\(stamp.string(from: Date()))  \(prefix)\(flat)"
         lines.append(line)
@@ -63,7 +63,7 @@ final class DiagLog: ObservableObject {
         append(line)
     }
 
-    /// Több soros blokk (pl. egy fájl első sorai) beolvasható tagolással.
+    /// A multi-line block (e.g. the first lines of a file) with readable indentation.
     func logBlock(_ title: String, _ body: String, _ cat: String = "") {
         log(title, cat)
         for l in body.split(whereSeparator: \.isNewline).prefix(20) {
