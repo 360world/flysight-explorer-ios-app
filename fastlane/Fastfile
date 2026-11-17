@@ -74,9 +74,30 @@ platform :ios do
       export_options: { provisioningProfiles: { APP_ID => PROFILE } }
     )
 
+    # With a changelog, fastlane waits until the build shows up in App Store
+    # Connect, sets "What to Test", and then stops waiting.
     upload_to_testflight(
       api_key: api_key,
+      changelog: testflight_notes(version),
       skip_waiting_for_build_processing: true
     )
+  end
+
+  # Plain-text "What to Test" for TestFlight: one line per commit (squash-merged
+  # PR titles) since the previous v* tag, without dependency bumps.
+  def testflight_notes(version)
+    prev = begin
+      sh("git", "describe", "--tags", "--abbrev=0", "--match", "v*", "HEAD^", log: false).strip
+    rescue StandardError
+      ""
+    end
+    range = prev.empty? ? "HEAD" : "#{prev}..HEAD"
+    subjects = sh("git", "log", "--no-merges", "--pretty=format:%s", range, log: false)
+               .lines.map(&:strip)
+               .reject { |s| s.empty? || s.match?(/\A(Bump |build\(deps)/i) }
+               .map { |s| "• " + s.sub(/\s*\(#\d+\)\z/, "") }
+    header = prev.empty? ? "Version #{version}" : "Version #{version} — changes since #{prev}:"
+    notes = ([header] + subjects).join("\n")
+    notes.length > 3900 ? notes[0, 3900] + "\n…" : notes
   end
 end

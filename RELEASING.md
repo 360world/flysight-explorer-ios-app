@@ -11,12 +11,25 @@ Official builds are signed with 360world's Apple Developer account
    git tag v1.2.0
    git push origin v1.2.0
    ```
-3. The **Release to TestFlight** workflow starts and waits for approval of the
-   `app-store` environment. Approve it in the Actions tab.
+3. The **Release** workflow starts and waits for approval of the `app-store`
+   environment. Approve it in the Actions tab.
 4. fastlane fetches the signing certificate/profile from the encrypted match
    repo, builds with `MARKETING_VERSION=1.2.0` and the next free build number,
-   and uploads to TestFlight.
-5. In App Store Connect, test the build in TestFlight, then submit it for review.
+   and uploads to TestFlight. The TestFlight "What to Test" text lists the
+   commits since the previous `v*` tag (dependency bumps left out).
+5. After a successful upload, a **GitHub Release** `v1.2.0` is created with
+   notes generated from the PRs merged since the previous release, grouped by
+   label (see `.github/release.yml`). You can edit the notes on GitHub
+   afterwards.
+6. In App Store Connect, test the build in TestFlight, then submit it for review.
+
+### Labels drive the release notes
+
+Before merging a PR, give it one label: `enhancement` (🚀 New features),
+`bug` (🐛 Bug fixes) or `documentation` (📖 Documentation). Anything else goes
+under 🧰 Other changes. Use `skip-changelog` to leave a PR out entirely.
+Dependabot PRs are always left out. PR titles become the release-note lines,
+so make them readable.
 
 ## Where the secrets live
 
