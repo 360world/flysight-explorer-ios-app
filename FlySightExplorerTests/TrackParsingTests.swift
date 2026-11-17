@@ -4,7 +4,7 @@
 
 import Foundation
 import Testing
-@testable import FlysightExplorer_ios
+@testable import FlySightExplorer
 
 @MainActor
 struct TrackParsingTests {

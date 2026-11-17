@@ -1,19 +1,19 @@
 //
 //  FlySightBLE.swift
-//  Kapcsolat, kapcsolattartás, fájlböngészés, letöltés és feltöltés.
+//  Connection, keepalive, file browsing, download and upload.
 //
-//  IGAZOLT PROTOKOLL (a hivatalos flysight-ios-core forrásából és méréssel):
-//    0xFE  ping, 15 mp-enként az FT_Packet_In-re, enélkül 30 mp után bont
-//    0xF1  ACK + eredeti parancs      0xF0  NAK + eredeti parancs
-//    0x05  könyvtárlistázás, utána útvonal PERJELLEL és lezáró 0x00
-//    0x11  könyvtárbejegyzés válasz, 22 bájt: méret, FAT dátum/idő, attribútum, név
-//    0x03  fájl megnyitása írásra
-//    0xFF  átvitel megszakítása
-//    A párosítást az FT_Packet_In OLVASÁSA váltja ki, nem írás.
+//  VERIFIED PROTOCOL (from the official flysight-ios-core source and by measurement):
+//    0xFE  ping, every 15 s to FT_Packet_In; without it the device disconnects after 30 s
+//    0xF1  ACK + original command     0xF0  NAK + original command
+//    0x05  directory listing, followed by the path WITH A LEADING SLASH and a terminating 0x00
+//    0x11  directory entry response, 22 bytes: size, FAT date/time, attribute, name
+//    0x03  open file for writing
+//    0xFF  cancel transfer
+//    Pairing is triggered by READING FT_Packet_In, not by writing it.
 //
-//  ELLENŐRIZENDŐ: readFile / fileData / ackFileData értékei. Ezek a
-//  ConstantsAndTypes.swift-ben vannak, amit nem láttunk. A letöltés
-//  automatikusan próbálja mindkét útvonalformát, mielőtt feladná.
+//  TO VERIFY: the values of readFile / fileData / ackFileData. These are
+//  defined in ConstantsAndTypes.swift, which we haven't seen. The download
+//  automatically tries both path forms before giving up.
 //
 
 import SwiftUI
@@ -26,12 +26,12 @@ enum FS {
     static let sdGNSS      = CBUUID(string: "00000000-8E22-4541-9D4C-21EDAE82ED19")
     static let companyID: UInt16 = 0x09DB
     static let savedKey = "flysight_peripheral_uuid"
-    /// UUID → becenév. Csak az appon belüli elnevezés; magán az eszközön
-    /// semmit nem írunk át, ezért a becenév törlésével visszaáll a gyári név.
+    /// UUID → nickname. Only an in-app name; nothing is rewritten on the
+    /// device itself, so deleting the nickname restores the factory name.
     static let nicknamesKey = "flysight_nicknames"
 }
 
-/// Egy felderített (vagy korábban már használt) FlySight.
+/// A discovered (or previously used) FlySight.
 struct FlySightDevice: Identifiable, Equatable {
     let id: UUID
     var advertisedName: String
@@ -40,7 +40,7 @@ struct FlySightDevice: Identifiable, Equatable {
 }
 
 extension UInt32 {
-    /// Kis-végű 4 bájt — a readFile parancs offset mezőihez
+    /// Little-endian 4 bytes — for the offset fields of the readFile command
     var littleEndianData: Data {
         var v = self.littleEndian
         return Data(bytes: &v, count: 4)
@@ -125,15 +125,15 @@ final class FlySightBLE: NSObject, ObservableObject {
     @Published private(set) var log: [String] = []
     @Published var lastError: String?
 
-    /// A felderített eszközök, legutóbb látott sorrendben.
+    /// Discovered devices, ordered by most recently seen.
     @Published private(set) var devices: [FlySightDevice] = []
-    /// Az éppen kapcsolódott eszköz, ha van.
+    /// The currently connected device, if any.
     @Published private(set) var connectedID: UUID?
-    /// UUID → becenév.
+    /// UUID → nickname.
     @Published private(set) var nicknames: [String: String] = [:]
 
     var onLive: ((LiveGNSS) -> Void)?
-    /// (távoli útvonal, fájlnév, tartalom)
+    /// (remote path, file name, contents)
     var onFileDownloaded: ((String, String, String) -> Void)?
     var onUploadFinished: ((Bool, String) -> Void)?
 
@@ -141,14 +141,14 @@ final class FlySightBLE: NSObject, ObservableObject {
     private var target: CBPeripheral?
     private var chIn: CBCharacteristic?
     private var pingTimer: Timer?
-    /// Amelyik eszközhöz automatikusan kapcsolódunk, és amelyikhez
-    /// újrakapcsolódunk bontás után.
+    /// The device we connect to automatically, and reconnect to
+    /// after a disconnect.
     private var preferredID: UUID?
-    /// A felderített peripheral objektumok, hogy később is tudjunk kapcsolódni.
+    /// Discovered peripheral objects, so we can still connect to them later.
     private var seen: [UUID: CBPeripheral] = [:]
     private var want = false
 
-    // letöltés
+    // download
     private var buf = Data()
     private var expected: UInt8 = 0
     private var pktCount = 0
@@ -156,7 +156,7 @@ final class FlySightBLE: NSObject, ObservableObject {
     private var dlSize: UInt32 = 0
     private var dlComponents: [String] = []
 
-    // feltöltés
+    // upload
     private var upData = Data()
     private var upOffset = 0
     private var upSeq: UInt8 = 0
@@ -173,15 +173,15 @@ final class FlySightBLE: NSObject, ObservableObject {
         central = CBCentralManager(delegate: self, queue: .main)
     }
 
-    // MARK: eszközök és becenevek
+    // MARK: devices and nicknames
 
-    /// Amit a listában látsz: a becenév, ha adtál, különben a gyári (hirdetett) név.
+    /// What you see in the list: the nickname if you set one, otherwise the factory (advertised) name.
     func displayName(_ id: UUID) -> String {
         if let n = nicknames[id.uuidString], !n.isEmpty { return n }
         return advertisedName(id)
     }
 
-    /// A gyári, BLE-ben hirdetett név.
+    /// The factory name advertised over BLE.
     func advertisedName(_ id: UUID) -> String {
         devices.first { $0.id == id }?.advertisedName
             ?? seen[id]?.name
@@ -192,8 +192,8 @@ final class FlySightBLE: NSObject, ObservableObject {
         !(nicknames[id.uuidString] ?? "").isEmpty
     }
 
-    /// Becenév beállítása. `nil` vagy üres szöveg TÖRLI, tehát visszaáll a
-    /// gyári név — az eszközön semmit nem módosítottunk, így ez veszteségmentes.
+    /// Sets the nickname. `nil` or an empty string DELETES it, restoring the
+    /// factory name — nothing was modified on the device, so this is lossless.
     func setNickname(_ name: String?, for id: UUID) {
         let trimmed = (name ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
         if trimmed.isEmpty {
@@ -206,7 +206,7 @@ final class FlySightBLE: NSObject, ObservableObject {
         UserDefaults.standard.set(nicknames, forKey: FS.nicknamesKey)
     }
 
-    /// Kapcsolódás egy konkrét eszközhöz a listából.
+    /// Connect to a specific device from the list.
     func connect(to id: UUID) {
         guard let p = seen[id] ?? central.retrievePeripherals(withIdentifiers: [id]).first
         else { note("Cannot connect: peripheral \(id.uuidString) not found"); return }
@@ -224,7 +224,7 @@ final class FlySightBLE: NSObject, ObservableObject {
         central.connect(p, options: nil)
     }
 
-    /// Elfelejtjük az eszközt: becenév és automatikus kapcsolódás törlése.
+    /// Forget the device: clear its nickname and automatic connection.
     func forget(_ id: UUID) {
         setNickname(nil, for: id)
         if preferredID == id {
@@ -248,10 +248,10 @@ final class FlySightBLE: NSObject, ObservableObject {
         devices.sort { $0.lastSeen > $1.lastSeen }
     }
 
-    /// Kétnyelvű felhasználói szöveg. A NAPLÓ mindig angol, ez csak a
-    /// felhasználónak megjelenő hibaüzenetekre és állapotokra kell.
+    /// Bilingual user-facing text. The LOG is always in English; this is only
+    /// needed for error messages and states shown to the user.
     private var lang: String {
-        UserDefaults.standard.string(forKey: "app_language") ?? "hu"
+        UserDefaults.standard.string(forKey: "app_language") ?? AppLanguage.systemDefault.rawValue
     }
     private func L(_ hu: String, _ en: String) -> String { lang == "en" ? en : hu }
 
@@ -259,18 +259,18 @@ final class FlySightBLE: NSObject, ObservableObject {
         let f = DateFormatter(); f.dateFormat = "HH:mm:ss"
         log.append("\(f.string(from: Date()))  \(s)")
         if log.count > 400 { log.removeFirst(100) }
-        // Tartós naplóba is — hogy újraindítás után is visszanézhető legyen.
+        // Also to the persistent log — so it can be reviewed after a restart.
         DiagLog.shared.log(s, "BLE")
     }
 
-    /// Publikus belépési pont a naplóba, más komponensek (pl. Logbook mentés
-    /// eredménye) számára — hogy a mentés sikere/hibája is megjelenjen a
-    /// BLE naplóban, nem csak egy eltűnő toast-ban.
+    /// Public entry point to the log for other components (e.g. the Logbook save
+    /// result) — so a save's success/failure also shows up in the
+    /// BLE log, not just in a disappearing toast.
     func logNote(_ s: String) { note(s) }
     var logText: String { log.joined(separator: "\n") }
     var pathString: String { "/" + path.joined(separator: "/") }
 
-    // MARK: kapcsolat
+    // MARK: connection
 
     private func bluetoothProblem(_ s: CBManagerState) -> String {
         switch s {
@@ -301,8 +301,8 @@ final class FlySightBLE: NSObject, ObservableObject {
             return
         }
         state = .searching; note("Scanning started")
-        // A korábban használt eszköz azonnal jelenjen meg a listában, még a
-        // felderítés előtt — és ha megvan, kapcsolódjunk hozzá automatikusan.
+        // The previously used device should appear in the list immediately, even
+        // before discovery — and if it's found, connect to it automatically.
         if let u = preferredID,
            let p = central.retrievePeripherals(withIdentifiers: [u]).first {
             remember(p, name: p.name ?? "FlySight", rssi: nil)
@@ -313,7 +313,7 @@ final class FlySightBLE: NSObject, ObservableObject {
         central.scanForPeripherals(withServices: nil, options: nil)
     }
 
-    /// Újrakeresés: a lista frissítése kapcsolódás nélkül.
+    /// Rescan: refresh the list without connecting.
     func rescanDevices() {
         guard central.state == .poweredOn else { return }
         central.stopScan()
@@ -341,7 +341,7 @@ final class FlySightBLE: NSObject, ObservableObject {
         pingTimer = Timer.scheduledTimer(withTimeInterval: 15, repeats: true) { _ in
             Task { @MainActor [weak self] in
                 guard let s = self else { return }
-                // Átvitel közben a forgalom maga tartja életben a kapcsolatot
+                // During a transfer the traffic itself keeps the connection alive
                 if !s.transfer.isActive { s.send(Data([FT.ping])) }
             }
         }
@@ -352,7 +352,7 @@ final class FlySightBLE: NSObject, ObservableObject {
         return max(16, min(p.maximumWriteValueLength(for: .withoutResponse) - 2, 240))
     }
 
-    // MARK: böngészés
+    // MARK: browsing
 
     func listDirectory() {
         entries.removeAll(); isListing = true
@@ -370,21 +370,21 @@ final class FlySightBLE: NSObject, ObservableObject {
     }
     func goRoot() { path.removeAll(); listDirectory() }
 
-    // MARK: letöltés
+    // MARK: download
 
     func download(_ e: RemoteEntry) {
         guard !transfer.isActive else { return }
         buf.removeAll(); expected = 0; pktCount = 0
         dlName = e.name; dlSize = e.size
-        // A listázás perjellel kezdi az útvonalat — ugyanezt használjuk itt is.
+        // Listing starts the path with a slash — we use the same form here.
         dlComponents = ["/" + (path + [e.name]).joined(separator: "/")]
         transfer = .downloading(e.name); progress = 0
         note("Download \(e.name) (\(e.size) bytes)")
         sendReadFile()
     }
 
-    /// A readFile payload: [0x02][offsetMultiplier u32 LE][strideMinusOneMultiplier
-    /// u32 LE][útvonal][0x00]. Teljes fájl letöltésénél mindkét szám 0.
+    /// The readFile payload: [0x02][offsetMultiplier u32 LE][strideMinusOneMultiplier
+    /// u32 LE][path][0x00]. For a full-file download both numbers are 0.
     private func sendReadFile() {
         let p = dlComponents[0]
         var c = Data([FT.readFile])
@@ -402,7 +402,7 @@ final class FlySightBLE: NSObject, ObservableObject {
         note("Cancelled")
     }
 
-    // MARK: feltöltés
+    // MARK: upload
 
     func upload(text: String, toPath components: [String], name: String) {
         guard !transfer.isActive, state == .connected else { return }
@@ -426,7 +426,7 @@ final class FlySightBLE: NSObject, ObservableObject {
     private func sendNextUploadChunk() {
         let size = chunkSize
         if upOffset >= upData.count {
-            send(Data([FT.fileData, upSeq]))        // üres csomag = vége
+            send(Data([FT.fileData, upSeq]))        // empty packet = end
             note("Upload finalized")
             return
         }
@@ -439,7 +439,7 @@ final class FlySightBLE: NSObject, ObservableObject {
         progress = Double(upOffset) / Double(max(1, upData.count))
     }
 
-    // MARK: bejövő FT csomagok
+    // MARK: incoming FT packets
 
     private func handleFT(_ d: Data) {
         guard let op = d.first else { return }
@@ -470,24 +470,24 @@ final class FlySightBLE: NSObject, ObservableObject {
                                  isDirectory: (attr & 0x10) != 0))
             entries.sort {
                 if $0.isDirectory != $1.isDirectory { return $0.isDirectory }
-                return $0.name > $1.name          // legfrissebb mappa elöl
+                return $0.name > $1.name          // newest folder first
             }
 
         case FT.fileData:
             guard d.count >= 2 else { return }
-            // Letöltés adatcsomagja
+            // Download data packet
             if case .downloading = transfer {
                 if buf.isEmpty && d[1] == 0 { note("Data stream starting") }
                 if d[1] != expected {
-                    // Ismételt küldés (elveszett ACK): újra nyugtázzuk, de NEM
-                    // fűzzük hozzá még egyszer az adatot.
+                    // Retransmission (lost ACK): acknowledge it again, but do NOT
+                    // append the data a second time.
                     if d[1] == expected &- 1 {
                         send(Data([FT.ackFileData, d[1]]))
                         return
                     }
-                    // Valódi lyuk a sorszámozásban: innentől a fájl biztosan
-                    // hiányos lenne. Korábban ezt némán eldobtuk, és a végén
-                    // csonka CSV-t mentettünk — inkább egyértelmű hibát adunk.
+                    // A real gap in the sequence numbers: from here on the file would
+                    // certainly be incomplete. We used to drop this silently and end up
+                    // saving a truncated CSV — better to report a clear error instead.
                     note("Packet sequence error: got \(d[1]), expected \(expected) — download aborted")
                     send(Data([FT.cancel]))
                     transfer = .none; progress = 0
@@ -500,15 +500,15 @@ final class FlySightBLE: NSObject, ObservableObject {
                 let payload = d.count > 2 ? d.subdata(in: 2..<d.count) : Data()
                 send(Data([FT.ackFileData, d[1]]))
                 if payload.isEmpty {
-                    // String(data:encoding:.utf8) NIL-t ad vissza akár egyetlen
-                    // hibás bájtnál is, és akkor a fájl csendben üresként mentődik.
-                    // A veszteséges dekódolás sosem hibázik: legfeljebb a hibás
-                    // bájtokat cseréli le, a többi sor épen marad.
+                    // String(data:encoding:.utf8) returns NIL on even a single
+                    // invalid byte, and then the file is silently saved as empty.
+                    // Lossy decoding never fails: at worst it replaces the invalid
+                    // bytes, and the remaining lines stay intact.
                     let text = String(decoding: buf, as: UTF8.self)
                     let remote = dlComponents.first ?? (dlName ?? "file")
-                    // A listázásból ismerjük a fájl méretét — ha kevesebb bájt
-                    // érkezett, a letöltés valóban hiányos. Ez az EGYETLEN hely,
-                    // ahol a "hiányos letöltés" megállapítása értelmes.
+                    // We know the file size from the listing — if fewer bytes
+                    // arrived, the download really is incomplete. This is the ONLY place
+                    // where concluding "incomplete download" makes sense.
                     if dlSize > 0 && buf.count < Int(dlSize) {
                         note("Incomplete download: \(buf.count)/\(dlSize) bytes")
                         transfer = .none; progress = 0
@@ -524,9 +524,9 @@ final class FlySightBLE: NSObject, ObservableObject {
                 } else {
                     buf.append(payload); expected = expected &+ 1
                     if dlSize > 0 { progress = min(1, Double(buf.count) / Double(dlSize)) }
-                    // Minden 50. csomagnál jelzünk, hogy elakadás esetén
-                    // látszódjon, hol állt meg az átvitel. Külön Int számláló,
-                    // mert az `expected` UInt8 és 256-onként visszafordul.
+                    // Log every 50th packet so that, if the transfer stalls,
+                    // it's visible where it stopped. A separate Int counter,
+                    // because `expected` is a UInt8 and wraps around every 256.
                     pktCount += 1
                     if pktCount % 50 == 0 {
                         DiagLog.shared.log("… \(buf.count)/\(dlSize) bytes "
@@ -536,7 +536,7 @@ final class FlySightBLE: NSObject, ObservableObject {
             }
 
         case FT.ackFileData:
-            // Feltöltés nyugtája: jöhet a következő darab
+            // Upload acknowledgement: send the next chunk
             if case .uploading = transfer {
                 if upOffset >= upData.count {
                     transfer = .none; progress = 1
@@ -631,9 +631,9 @@ extension FlySightBLE: CBCentralManagerDelegate {
                 note("Found \(displayName(p.identifier)) \(rssi.intValue) dBm")
             }
 
-            // Több eszköz is lehet a közelben, ezért NEM kapcsolódunk vakon az
-            // elsőre: csak ahhoz, amit korábban használtál. A többi a listában
-            // várja, hogy kiválaszd.
+            // Several devices may be nearby, so we do NOT blindly connect to the
+            // first one: only to the one you used before. The others wait in the
+            // list for you to pick them.
             guard want, state == .searching, p.identifier == preferredID else { return }
             target = p; p.delegate = self; state = .connecting
             c.connect(p, options: nil)
@@ -671,10 +671,10 @@ extension FlySightBLE: CBCentralManagerDelegate {
                 transfer = .none
             }
             note("Disconnected from \(displayName(p.identifier))")
-            // Csak a kiválasztott eszközhöz kapcsolódunk vissza automatikusan.
+            // Only reconnect automatically to the selected device.
             guard want, p.identifier == preferredID else { state = .idle; return }
             state = .connecting
-            c.connect(p, options: nil)      // iOS-en függőben marad
+            c.connect(p, options: nil)      // stays pending on iOS
         }
     }
 }
@@ -691,14 +691,14 @@ extension FlySightBLE: CBPeripheralDelegate {
 
     nonisolated func peripheral(_ p: CBPeripheral,
                                 didDiscoverCharacteristicsFor s: CBService, error: Error?) {
-        // Szinkron feldolgozás, hogy a `chIn` és a notify-beállítás biztosan
-        // kész legyen, mielőtt az első FT csomag megérkezik.
+        // Process synchronously so that `chIn` and the notify setup are guaranteed
+        // to be ready before the first FT packet arrives.
         MainActor.assumeIsolated {
             for ch in s.characteristics ?? [] {
                 switch ch.uuid {
                 case FS.ftPacketIn:
                     chIn = ch
-                    p.readValue(for: ch)      // ez váltja ki a párosítást
+                    p.readValue(for: ch)      // this triggers pairing
                     startPing()
                 case FS.ftPacketOut, FS.sdGNSS:
                     p.setNotifyValue(true, for: ch)
@@ -713,16 +713,16 @@ extension FlySightBLE: CBPeripheralDelegate {
     nonisolated func peripheral(_ p: CBPeripheral,
                                 didUpdateValueFor ch: CBCharacteristic, error: Error?) {
         let uuid = ch.uuid, d = ch.value ?? Data()
-        // FONTOS: itt NEM indíthatunk `Task { @MainActor in ... }`-ot!
-        // Külön Task-ok futási SORRENDJE nem garantált, a letöltésnél viszont
-        // másodpercenként több száz csomag érkezik, és ezek sorrendje kritikus:
-        // az átrendeződő csomagokat a `d[1] == expected` ellenőrzés némán
-        // eldobta, így a fájl közepéből hiányoztak darabok, a végén pedig
-        // csonka CSV-t mentettünk el ("hiányos letöltés").
+        // IMPORTANT: we must NOT start a `Task { @MainActor in ... }` here!
+        // The execution ORDER of separate Tasks is not guaranteed, yet during a download
+        // hundreds of packets arrive per second, and their order is critical:
+        // the `d[1] == expected` check silently dropped reordered packets,
+        // so chunks were missing from the middle of the file, and in the end
+        // we saved a truncated CSV ("incomplete download").
         //
-        // A CBCentralManager delegate queue-ja `.main`, tehát ez a callback
-        // már a fő szálon fut — így szinkronban, ÉRKEZÉSI SORRENDBEN tudjuk
-        // feldolgozni a csomagokat.
+        // The CBCentralManager delegate queue is `.main`, so this callback
+        // already runs on the main thread — so we can process the packets
+        // synchronously, IN ARRIVAL ORDER.
         MainActor.assumeIsolated {
             guard error == nil else { return }
             if uuid == FS.sdGNSS {

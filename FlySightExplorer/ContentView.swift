@@ -1,13 +1,13 @@
 //
 //  ContentView.swift  —  FlySight HUD + Analyzer (iOS)
-//  Négy fül: HUD, Elemzés, Napló, FlySight (kapcsolat + konfigurátor)
+//  Four tabs: HUD, Analysis, Logbook, FlySight (connection + configurator)
 //
-//  BEÁLLÍTÁS
-//    Xcode > iOS App (SwiftUI), a generált <Projekt>App.swift törlendő.
+//  SETUP
+//    Xcode > iOS App (SwiftUI); delete the generated <Project>App.swift.
 //    Target > Info: Privacy - Bluetooth Always Usage Description
-//    Fájlok a projektben: Model.swift, FlySightBLE.swift, Logbook.swift,
+//    Files in the project: Model.swift, FlySightBLE.swift, Logbook.swift,
 //    FlySightConfig.swift, ContentView.swift
-//    Húzd be a bundle-be: SAMPLE_WINGSUIT.csv, SAMPLE_TRACKING.csv
+//    Drag into the bundle: SAMPLE_WINGSUIT.csv, SAMPLE_TRACKING.csv
 //
 
 import SwiftUI
@@ -15,10 +15,10 @@ import Combine
 import MapKit
 import Charts
 import CoreLocation
-import UIKit          // UIPasteboard — napló vágólapra másolása
-import UniformTypeIdentifiers   // UTType — CSV import a Fájlokból
+import UIKit          // UIPasteboard — copying the log to the clipboard
+import UniformTypeIdentifiers   // UTType — CSV import from Files
 
-// MARK: - Alkalmazás állapot
+// MARK: - App state
 
 @MainActor
 final class AppModel: ObservableObject {
@@ -57,22 +57,22 @@ final class AppModel: ObservableObject {
                 s.toast = s.lang == "en" ? "CONFIG.TXT loaded from device"
                                          : "CONFIG.TXT betöltve az eszközről"
             } else {
-                // A nyers CSV-t mindig elmentjük — a "túl rövid / hiányos"
-                // eset csak a megjelenítésnél (Track.parse) dönt el, nem
-                // blokkolja a letöltést/mentést magát.
+                // We always save the raw CSV — the "too short / incomplete"
+                // case is only decided at display time (Track.parse); it does not
+                // block the download/save itself.
                 guard let e = s.logbook.save(text: text, remotePath: remote,
                                              suggestedName: name) else {
-                    // Ez valódi I/O hiba (pl. lemez tele, írási jog hiánya) —
-                    // ez a tényleges "nem sikerült elmenteni" eset.
+                    // This is a real I/O error (e.g. disk full, missing write permission) —
+                    // this is the actual "could not save" case.
                     s.ble.logNote("Save failed (I/O error): \(name) (\(text.utf8.count) bytes)")
                     s.toast = (s.lang == "en" ? "Couldn't save: " : "Nem sikerült elmenteni: ")
                         + name
                     return
                 }
                 guard let t = s.logbook.load(e) else {
-                    // A fájl lemezen van és a naplóban is szerepel — csak a
-                    // megjelenítéshez nincs elég GNSS minta (rövid felvétel
-                    // vagy hiányos letöltés). Ez itt, megjelenítéskor derül ki.
+                    // The file is on disk and in the logbook too — there just aren't
+                    // enough GNSS samples to display (short recording or incomplete
+                    // download). That only turns out here, at display time.
                     s.ble.logNote("Saved, but too short/incomplete to display: \(e.displayName) (\(text.utf8.count) bytes)")
                     s.toast = (s.lang == "en"
                         ? "Saved to logbook, but too short/incomplete to open: "
@@ -87,7 +87,7 @@ final class AppModel: ObservableObject {
             }
         }
         ble.onUploadFinished = { [weak self] ok, name in
-            let en = (self?.lang ?? "hu") == "en"
+            let en = (self?.lang ?? AppLanguage.systemDefault.rawValue) == "en"
             self?.toast = ok ? (en ? "\(name) uploaded to device"
                                    : "\(name) feltöltve az eszközre")
                              : (en ? "Upload failed" : "A feltöltés nem sikerült")
@@ -101,10 +101,10 @@ final class AppModel: ObservableObject {
                     name: FlySightConfig.defaultSourceName)
     }
 
-    /// Az aktuális nyelv — ugyanaz a kulcs, amit a nézetek @AppStorage-dzsal
-    /// olvasnak. Az AppModel nem View, ezért közvetlenül a UserDefaults-ból.
+    /// The current language — the same key the views read with @AppStorage.
+    /// AppModel is not a View, so it reads UserDefaults directly.
     var lang: String {
-        UserDefaults.standard.string(forKey: "app_language") ?? "hu"
+        UserDefaults.standard.string(forKey: "app_language") ?? AppLanguage.systemDefault.rawValue
     }
 
     func loadSample(_ s: SampleTrack, _ lang: String = "hu") {
@@ -152,9 +152,9 @@ final class AppModel: ObservableObject {
         if cursor >= hi { cursor = lo }
         vt = t.samples[cursor].t
         isPlaying = true
-        // `.common` futásmód kell: a `scheduledTimer` alapértelmezett módú
-        // időzítője megáll, amíg a felhasználó görget vagy egy vezérlőt fog,
-        // ezért tűnt úgy, hogy a lejátszás csak kattintásra lép egyet.
+        // The `.common` run loop mode is needed: a `scheduledTimer` in the default
+        // mode stops while the user is scrolling or holding a control,
+        // which is why playback seemed to advance only one step per tap.
         let tm = Timer(timeInterval: 0.05, repeats: true) { _ in
             Task { @MainActor [weak self] in self?.step() }
         }
@@ -177,7 +177,7 @@ final class AppModel: ObservableObject {
     }
 }
 
-// MARK: - HUD elemek
+// MARK: - HUD elements
 
 struct Metric: View {
     let v: String, u: String, size: CGFloat, c: Color, d: Color
@@ -185,8 +185,8 @@ struct Metric: View {
         VStack(spacing: 2) {
             Text(v).font(.system(size: size, weight: .semibold, design: .rounded))
                 .monospacedDigit().foregroundStyle(c)
-                // Hosszú érték (pl. 4 jegyű magasság) eddig levágódott —
-                // inkább kicsinyítjük, mint hogy kifusson a képernyőről.
+                // Long values (e.g. 4-digit altitude) used to get truncated —
+                // better to scale them down than let them run off the screen.
                 .lineLimit(1).minimumScaleFactor(0.4)
             if !u.isEmpty {
                 Text(u.uppercased()).font(.system(size: max(10, size * 0.15)))
@@ -296,7 +296,7 @@ struct HUDView: View {
     }
 }
 
-// MARK: - Térkép
+// MARK: - Map
 
 struct TrackMap: View {
     let track: Track?
@@ -348,8 +348,8 @@ struct TrackMap: View {
         .onAppear { recenter(force: true) }
     }
 
-    /// Animáció nélkül és csak érdemi elmozdulásnál, különben a gyors
-    /// scrub SwiftUI animációs figyelmeztetéseket dob.
+    /// Without animation and only on meaningful movement, otherwise fast
+    /// scrubbing triggers SwiftUI animation warnings.
     private func recenter(force: Bool = false) {
         var target: CLLocationCoordinate2D?
         if let t = track {
@@ -387,16 +387,16 @@ struct PhaseLegend: View {
     }
 }
 
-// MARK: - Tartománysáv
+// MARK: - Range bar
 
 struct RangeBar: View {
     let track: Track
     @Binding var lo: Int
     @Binding var hi: Int
     @Binding var cursor: Int
-    /// Akkor hívjuk, ha a FELHASZNÁLÓ mozgatja a kurzort/fogantyút. A lejátszást
-    /// csak ilyenkor kell leállítani — a `onChange(of: cursor)` erre nem jó,
-    /// mert az a lejátszás saját léptetésénél is lefut, és azonnal megállítja.
+    /// Called when the USER moves the cursor/handle. Playback should only be
+    /// stopped in that case — `onChange(of: cursor)` is no good for this,
+    /// because it also fires on playback's own stepping and stops it immediately.
     var onUserScrub: (() -> Void)? = nil
     private let h: CGFloat = 46
 
@@ -404,8 +404,8 @@ struct RangeBar: View {
         GeometryReader { geo in
             let w = max(1, geo.size.width)
             let n = max(1, track.count - 1)
-            // Az indexek 0…n közé szorítva, hogy egy hibás kurzor/kijelölés
-            // ne tudjon a kereten kívülre rajzolni.
+            // Indices clamped to 0…n so that a bad cursor/selection
+            // cannot draw outside the frame.
             let xLo = CGFloat(min(max(lo, 0), n)) / CGFloat(n) * w
             let xHi = CGFloat(min(max(hi, 0), n)) / CGFloat(n) * w
             let xCur = CGFloat(min(max(cursor, 0), n)) / CGFloat(n) * w
@@ -413,8 +413,8 @@ struct RangeBar: View {
             ZStack(alignment: .leading) {
                 HStack(spacing: 0) {
                     ForEach(track.bands) { b in
-                        // 0 hosszú tracknél a nevező ~0 volt, így a `frac`
-                        // elszállt és a sávok kitolták a keretet. Korlátozva.
+                        // For a zero-length track the denominator was ~0, so `frac`
+                        // blew up and the bars pushed out the frame. Now clamped.
                         let total = track.tEnd - track.t0
                         let frac = total > 0.001
                             ? min(1, max(0, (b.t1 - b.t0) / total)) : 0
@@ -424,11 +424,11 @@ struct RangeBar: View {
                 .frame(width: w, height: h, alignment: .leading)
                 .clipShape(RoundedRectangle(cornerRadius: 8))
 
-                // A magasságprofil a sáv saját skálájára normalizálva. A `f`-et
-                // KORLÁTOZNI kell 0…1 közé, és a Path-ot VÁGNI: egy földi
-                // (ugrás nélküli) track esetén ugyanis az értékek kifutottak a
-                // keretből, és a rajz hosszú szürke/fehér vonalakként terült
-                // szét az egész oldalon.
+                // The altitude profile normalized to the bar's own scale. `f` MUST
+                // be CLAMPED to 0…1 and the Path must be CLIPPED: for a ground
+                // (no-jump) track the values ran outside the frame, and the drawing
+                // spread across the whole page as long gray/white
+                // lines.
                 Path { p in
                     let n2 = max(1, track.count - 1)
                     let alts = track.samples.map(\.altM).filter { $0.isFinite }
@@ -468,8 +468,8 @@ struct RangeBar: View {
                             noAnim { cursor = min(max(Int(f * CGFloat(n)), lo), hi) }
                         })
 
-                // Rövid (pár mintás) felvételnél a ±5 miatt negatív vagy a
-                // mintaszámon túli index keletkezhetett — 0…n közé szorítva.
+                // With a short (few-sample) recording the ±5 could produce a negative
+                // index or one past the sample count — clamped to 0…n.
                 handle(x: xLo, w: w) { i in
                     noAnim { lo = max(0, min(i, max(0, hi - 5))) }
                 }
@@ -488,11 +488,11 @@ struct RangeBar: View {
         withTransaction(tx, b)
     }
 
-    /// A fogantyú látható csíkja 5 pt, de a fogási terület 30 pt — ezért a
-    /// csoport szélessége 30, és a csík ANNAK a közepén áll. Emiatt `x - 2.5`
-    /// eltolással a csík 12,5 pt-tal jobbra csúszott a kijelölés szélétől
-    /// (innen jött, hogy a sárga kurzor a fogantyú "elé" került, és a végét
-    /// nem lehetett telibe húzni). A csoportot a felére kell eltolni: `x - 15`.
+    /// The handle's visible stripe is 5 pt, but its hit area is 30 pt — so the
+    /// group is 30 wide and the stripe sits in ITS center. Because of this, with an
+    /// `x - 2.5` offset the stripe ended up 12.5 pt to the right of the selection edge
+    /// (that is why the yellow cursor got "ahead of" the handle, and the end
+    /// could not be dragged all the way). The group must be offset by half: `x - 15`.
     private static let hitW: CGFloat = 30
     private static let space = "rangebar"
 
@@ -504,9 +504,9 @@ struct RangeBar: View {
                 .frame(width: Self.hitW, height: h + 16)
         }
         .offset(x: x - Self.hitW / 2)
-        // A gesztus a SÁV koordinátarendszerében mérjen, ne a fogantyúéban —
-        // különben `location.x` 0…30 közötti érték, és a `/ w` osztás miatt a
-        // fogantyú a sáv elejére ugrott.
+        // The gesture must measure in the BAR's coordinate space, not the handle's —
+        // otherwise `location.x` is a value between 0…30, and due to the `/ w` division
+        // the handle jumped to the start of the bar.
         .gesture(DragGesture(minimumDistance: 0, coordinateSpace: .named(Self.space))
             .onChanged { v in
                 onUserScrub?()
@@ -516,7 +516,7 @@ struct RangeBar: View {
     }
 }
 
-// MARK: - Idővonal görbe
+// MARK: - Timeline chart
 
 struct SeriesToggles: OptionSet {
     let rawValue: Int
@@ -525,7 +525,7 @@ struct SeriesToggles: OptionSet {
     static let horizontal = SeriesToggles(rawValue: 1 << 2)
     static let glide = SeriesToggles(rawValue: 1 << 3)
     static let distance = SeriesToggles(rawValue: 1 << 4)
-    /// (opció, lokalizációs kulcs, szín)
+    /// (option, localization key, color)
     static let all: [(SeriesToggles, String, Color)] = [
         (.altitude, "series.altitude", .gray),
         (.vertical, "series.vertical", .green),
@@ -541,25 +541,25 @@ struct TimelineChart: View {
     @Binding var cursor: Int
     let series: SeriesToggles
     let lang: String
-    /// Akkor hívjuk, ha a felhasználó kezdi csúszkáltatni a chartot — a
-    /// lejátszást ilyenkor le kell állítani.
+    /// Called when the user starts scrubbing the chart — playback
+    /// must be stopped in that case.
     var onScrubBegan: (() -> Void)? = nil
 
 
-    /// Nem-véges értékek kiszűrése — egy hibás minta (NaN/inf) különben
-    /// szétvágja a Swift Charts rajzát.
+    /// Filters out non-finite values — a bad sample (NaN/inf) would otherwise
+    /// break the Swift Charts drawing.
     private func safe(_ v: Double) -> Double { v.isFinite ? v : 0 }
 
-    /// A látható időtartomány hossza. 0 hosszú (földi) tracknél legalább 1 mp,
-    /// különben a tengely elfajul és a rajz összeomlik.
+    /// Length of the visible time range. At least 1 s for a zero-length (ground)
+    /// track, otherwise the axis degenerates and the drawing breaks down.
     private var span: Double {
         guard !track.samples.isEmpty else { return 1 }
         let s = track.samples[safeRange.upperBound].t - t0
         return s.isFinite && s > 0.5 ? s : 1
     }
 
-    /// A kapott tartomány a minták tényleges határai közé szorítva — egy régi
-    /// kijelölés (más, hosszabb trackről) különben indexhibával elszállna.
+    /// The given range clamped to the actual bounds of the samples — an old
+    /// selection (from another, longer track) would otherwise crash with an index error.
     private var safeRange: ClosedRange<Int> {
         let last = max(0, track.count - 1)
         let lo = min(max(range.lowerBound, 0), last)
@@ -579,7 +579,7 @@ struct TimelineChart: View {
         return track.samples[safeRange.lowerBound].t
     }
 
-    /// Kumulatív megtett távolság kilométerben, a pts pontjaihoz igazítva.
+    /// Cumulative distance covered in kilometers, aligned to the points of pts.
     private var distanceKm: [Double] {
         var out: [Double] = []
         var acc = 0.0
@@ -620,8 +620,8 @@ struct TimelineChart: View {
         }
     }
 
-    /// Sebesség (km/h) és siklószám (arányszám) — mindkettő természetes
-    /// tartománya nagyjából egybeesik, ezért közös tengelyen valódi értékkel.
+    /// Speed (km/h) and glide ratio (a ratio) — their natural ranges roughly
+    /// coincide, so they share an axis with real values.
     private var speedChart: some View {
         Chart {
             phaseBands
@@ -651,7 +651,7 @@ struct TimelineChart: View {
         .chartOverlay { proxy in dragOverlay(proxy) }
     }
 
-    /// Magasság (m) és megtett táv (km) — valódi mértékegységben, saját tengelyen.
+    /// Altitude (m) and distance covered (km) — in real units, each on its own axis.
     private func spaceChart(_ dist: [Double]) -> some View {
         Chart {
             phaseBands
@@ -698,16 +698,16 @@ struct TimelineChart: View {
         }
     }
 
-    /// Koppintás = kurzor odahelyezése; húzás = kurzor követése, de CSAK ha a
-    /// mozdulat inkább vízszintes. Így a fel/le húzás a ScrollView-hoz kerül,
-    /// és az Elemzés fül végre normálisan görgethető a chartokon is.
-    /// A kurzort a chart adott képernyő-x pozíciójára állítja.
+    /// Tap = place the cursor there; drag = cursor follows, but ONLY if the
+    /// movement is mostly horizontal. That way up/down drags go to the ScrollView,
+    /// and the Analysis tab finally scrolls normally over the charts too.
+    /// Sets the cursor to the given on-screen x position of the chart.
     private func moveCursor(_ proxy: ChartProxy, _ rect: CGRect, toX x: CGFloat) {
         guard let t: Double = proxy.value(atX: x - rect.minX) else { return }
         let idx = track.index(atTime: t + t0)
         let clamped = min(max(idx, safeRange.lowerBound), safeRange.upperBound)
-        // Csak tényleges változásnál írunk állapotot: a felesleges újrarajzolás
-        // az, ami a konzolt teleszórja a SwiftUI animációs figyelmeztetéseivel.
+        // We only write state on an actual change: unnecessary redraws are
+        // what floods the console with SwiftUI animation warnings.
         guard clamped != cursor else { return }
         var tx = Transaction(); tx.disablesAnimations = true
         withTransaction(tx) { cursor = clamped }
@@ -717,10 +717,10 @@ struct TimelineChart: View {
         GeometryReader { geo in
             if let plot = proxy.plotFrame {
                 let rect = geo[plot]
-                // UIKit pan gesztus (lásd ScrubOverlay.swift): vízszintes
-                // csúszkáltatás ÉS megmaradó fel/le görgetés. SwiftUI
-                // gesztusokkal ez nem megoldható, mert azok a lenyomásnál
-                // lefogják az érintést.
+                // UIKit pan gesture (see ScrubOverlay.swift): horizontal
+                // scrubbing AND preserved up/down scrolling. This can't be done
+                // with SwiftUI gestures, because they capture the touch
+                // on press.
                 ScrubOverlay(
                     onScrub: { x in moveCursor(proxy, rect, toX: x) },
                     onBegan: { onScrubBegan?() },
@@ -731,9 +731,9 @@ struct TimelineChart: View {
     }
 }
 
-// MARK: - HUD fül
+// MARK: - HUD tab
 
-// MARK: - HUD fül
+// MARK: - HUD tab
 
 struct HUDTab: View {
     @ObservedObject var m: AppModel
@@ -742,7 +742,7 @@ struct HUDTab: View {
     @AppStorage("hud_palette") private var paletteRaw = HUDPalette.color.rawValue
     @AppStorage("hud_altref") private var altRefRaw = AltRef.agl.rawValue
     @AppStorage("hud_map") private var showMap = true
-    @AppStorage("app_language") private var appLang = AppLanguage.hu.rawValue
+    @AppStorage("app_language") private var appLang = AppLanguage.systemDefault.rawValue
     @State private var showControls = true
 
     private var layout: HUDLayout { .init(rawValue: layoutRaw) ?? .glideFirst }
@@ -752,10 +752,10 @@ struct HUDTab: View {
     var body: some View {
         HUDView(e: m.engine, layout: layout, palette: palette, altRef: altRef, lang: appLang)
             .onTapGesture { withAnimation { showControls.toggle() } }
-            // A felső sáv (fázis + kistérkép) és az alsó vezérlőpanel eddig
-            // ZStack-ben a mutatók FÖLÉ került, ezért a panel levágta a
-            // számokat. A safeAreaInset viszont tényleges helyet foglal, így a
-            // HUD a maradék területre igazodik középre — nem lóg egymásba.
+            // The top bar (phase + mini map) and the bottom control panel used to sit
+            // in a ZStack ABOVE the gauges, so the panel cut off the
+            // numbers. safeAreaInset, however, takes up actual space, so the
+            // HUD centers itself in the remaining area — nothing overlaps.
             .safeAreaInset(edge: .top, spacing: 0) { topBar }
             .safeAreaInset(edge: .bottom, spacing: 0) {
                 if showControls {
@@ -853,12 +853,12 @@ struct HUDTab: View {
     }
 }
 
-// MARK: - Elemzés fül
+// MARK: - Analysis tab
 
 struct AnalysisTab: View {
     @ObservedObject var m: AppModel
     @ObservedObject var logbook: Logbook
-    @AppStorage("app_language") private var appLang = AppLanguage.hu.rawValue
+    @AppStorage("app_language") private var appLang = AppLanguage.systemDefault.rawValue
     @State private var series: SeriesToggles = [.altitude, .vertical, .horizontal]
     @State private var showPicker = false
 
@@ -922,8 +922,8 @@ struct AnalysisTab: View {
         }
     }
 
-    /// Fejlécsáv: mindig látható, mutatja a betöltött ugrást és a
-    /// választóra nyit — innen érhető el az összes letöltött és minta track.
+    /// Header bar: always visible, shows the loaded jump and opens the
+    /// picker — all downloaded and sample tracks are reachable from here.
     private var trackPicker: some View {
         Button { showPicker = true } label: {
             HStack {
@@ -1053,9 +1053,9 @@ struct AnalysisTab: View {
         "\(Int(t.agl(m.lo))) → \(Int(t.agl(m.hi))) \(loc("analysis.rangeAGL", appLang))"
     }
 
-    /// Földön bekapcsolt, ugrás nélküli felvételnél nincs mit elemezni:
-    /// nincs kiugrás, a magasság és a sebesség is lényegében állandó. Ilyenkor
-    /// szólunk, hogy ne a hibás grafikonokból próbáld kitalálni, mi történt.
+    /// For a recording switched on on the ground with no jump there is nothing to analyze:
+    /// there is no exit, and altitude and speed are essentially constant. In that case
+    /// we say so, so you don't try to figure out what happened from broken charts.
     @ViewBuilder
     private func notJumpWarning(_ t: Track) -> some View {
         let dur = t.tEnd - t.t0
@@ -1088,8 +1088,8 @@ struct AnalysisTab: View {
         let vText: String = "\(Int(s.vSpeedKmh))"
         let hText: String = "\(Int(s.hSpeedKmh))"
         let grText: String = s.glideRatio.map { String(format: "%.2f", $0) } ?? "—"
-        // Megtett táv a kijelölés kezdetétől a kurzorig — ugyanaz a lila szín,
-        // mint a "Távolság" adatsoré a chart fölötti választóban.
+        // Distance covered from the start of the selection to the cursor — the same purple
+        // as the "Distance" series in the picker above the chart.
         let dM: Double = t.distanceM(from: m.lo, to: i)
         let dText: String = dM < 1000 ? "\(Int(dM)) m"
                                       : String(format: "%.2f km", dM / 1000)
@@ -1135,19 +1135,19 @@ struct AnalysisTab: View {
     }
 }
 
-// MARK: - Napló fül
+// MARK: - Logbook tab
 
-// MARK: - Napló fül
+// MARK: - Logbook tab
 
 struct LogbookTab: View {
     @ObservedObject var m: AppModel
     @ObservedObject var logbook: Logbook
-    @AppStorage("app_language") private var appLang = AppLanguage.hu.rawValue
+    @AppStorage("app_language") private var appLang = AppLanguage.systemDefault.rawValue
     @State private var renaming: LogEntry?
     @State private var newName = ""
     @State private var showImporter = false
 
-    /// Kívülről behozott trackek: a rendszer fájlválasztójával, bárhonnan.
+    /// Tracks brought in from outside: via the system file picker, from anywhere.
     private var importSection: some View {
         Section {
             Button {
@@ -1250,9 +1250,9 @@ struct LogbookTab: View {
                                 Label(loc("nav.rename", appLang), systemImage: "pencil")
                             }.tint(.blue)
                         }
-                        // A nyers CSV kimenthető a Fájlokba / megosztható —
-                        // így egy nem elemezhető letöltés is megvizsgálható,
-                        // és a fájl nem ragad bent az alkalmazásban.
+                        // The raw CSV can be exported to Files / shared —
+                        // so even a download that can't be analyzed can be inspected,
+                        // and the file doesn't get stuck inside the app.
                         .contextMenu {
                             ShareLink(item: logbook.fileURL(e)) {
                                 Label(appLang == "hu" ? "Nyers CSV megosztása"
@@ -1285,15 +1285,15 @@ struct LogbookTab: View {
     }
 }
 
-// MARK: - Konfigurátor
+// MARK: - Configurator
 
-// MARK: - Konfigurátor
+// MARK: - Configurator
 
 struct ConfigTab: View {
     @ObservedObject var m: AppModel
     @ObservedObject var config: FlySightConfig
     @ObservedObject var ble: FlySightBLE
-    @AppStorage("app_language") private var appLang = AppLanguage.hu.rawValue
+    @AppStorage("app_language") private var appLang = AppLanguage.systemDefault.rawValue
     @State private var showRaw = false
     @State private var confirmUpload = false
 
@@ -1372,8 +1372,8 @@ struct ConfigTab: View {
         }
     }
 
-    /// A mezők súgó szövege (ConfigSchema.help) jelenleg csak magyarul
-    /// elérhető — ugyanezzel a loc()-mintával bővíthető, ha szükséges.
+    /// The fields' help text (ConfigSchema.help) is currently only available
+    /// in Hungarian — it can be extended with the same loc() pattern if needed.
     @ViewBuilder
     private func fieldRow(_ f: ConfigField) -> some View {
         switch f.kind {
@@ -1501,20 +1501,20 @@ struct AlarmRow: View {
     }
 }
 
-// MARK: - FlySight fül
+// MARK: - FlySight tab
 
 struct FlySightTab: View {
     @ObservedObject var m: AppModel
     @ObservedObject var ble: FlySightBLE
-    /// Kell a figyeléshez, hogy a "már letöltve" jelzés azonnal frissüljön.
+    /// Needed for observation, so the "already downloaded" indicator updates immediately.
     @ObservedObject var logbook: Logbook
-    @AppStorage("app_language") private var appLang = AppLanguage.hu.rawValue
+    @AppStorage("app_language") private var appLang = AppLanguage.systemDefault.rawValue
     @State private var renamingDevice: FlySightDevice?
     @State private var deviceNickname = ""
 
-    /// Több FlySight is lehet a közelben: itt látszik mindegyik, és te döntöd
-    /// el, melyikhez kapcsolódunk. A becenév csak az appban él — törölve
-    /// visszaáll a gyári név, mert magán az eszközön semmit nem írunk át.
+    /// There may be several FlySights nearby: all of them show up here, and you decide
+    /// which one we connect to. The nickname lives only in the app — deleting it
+    /// restores the factory name, since we don't change anything on the device itself.
     private var devicesSection: some View {
         Section {
             if ble.devices.isEmpty {
@@ -1695,8 +1695,8 @@ struct FlySightTab: View {
                                 }
                             }
                             .buttonStyle(.plain)
-                            // A már letöltött felvételt nem töltjük le újra —
-                            // így nem keletkezik duplikált naplóbejegyzés.
+                            // An already-downloaded recording is not downloaded again —
+                            // so no duplicate logbook entry is created.
                             .disabled(ble.transfer.isActive || already)
                         }
                     }
@@ -1747,11 +1747,11 @@ struct FlySightTab: View {
     }
 }
 
-// MARK: - Diagnosztikai napló
+// MARK: - Diagnostic log
 
 struct DiagnosticsView: View {
     @ObservedObject private var diag = DiagLog.shared
-    @AppStorage("app_language") private var appLang = AppLanguage.hu.rawValue
+    @AppStorage("app_language") private var appLang = AppLanguage.systemDefault.rawValue
     @State private var copied = false
 
     var body: some View {
@@ -1794,7 +1794,7 @@ struct DiagnosticsView: View {
         }
     }
 
-    /// A hibás sorok kiemelése, hogy ne kelljen keresgélni.
+    /// Highlights the error lines so you don't have to search for them.
     private func color(for line: String) -> Color {
         let l = line.uppercased()
         if l.contains("FAILED") || l.contains("ERROR") || l.contains("INCOMPLETE")
@@ -1804,13 +1804,13 @@ struct DiagnosticsView: View {
     }
 }
 
-// MARK: - Gyökér
+// MARK: - Root
 
-// MARK: - Gyökér
+// MARK: - Root
 
 struct ContentView: View {
     @StateObject private var m = AppModel()
-    @AppStorage("app_language") private var appLang = AppLanguage.hu.rawValue
+    @AppStorage("app_language") private var appLang = AppLanguage.systemDefault.rawValue
 
     var body: some View {
         TabView {
@@ -1846,9 +1846,9 @@ struct ContentView: View {
 @main
 struct FlySightApp: App {
     init() {
-        // Rögtön indításkor írunk a naplóba, így a Documents mappa biztosan
-        // nem üres — csak akkor jelenik meg az app a Fájlok appban
-        // (Saját iPhone → FlySight Explorer), ha van benne fájl.
+        // We write to the log right at launch, so the Documents folder is never
+        // empty — the app only shows up in the Files app
+        // (On My iPhone → FlySight Explorer) if it contains a file.
         DiagLog.shared.log("=== FlySight Explorer starting ===", "APP")
     }
     var body: some Scene { WindowGroup { ContentView() } }

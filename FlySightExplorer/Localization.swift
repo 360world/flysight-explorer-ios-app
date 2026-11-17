@@ -1,19 +1,19 @@
 //
 //  Localization.swift
-//  Egyszerű, kézzel karbantartott fordítási réteg magyar/angol nyelvhez.
+//  A simple, hand-maintained translation layer for Hungarian/English.
 //
-//  Használat: @AppStorage("app_language") private var appLang = AppLanguage.hu.rawValue
+//  Usage:     @AppStorage("app_language") private var appLang = AppLanguage.systemDefault.rawValue
 //             Text(loc("tab.hud", appLang))
 //
-//  Miért nem Xcode String Catalog: a projekt egyfájlos/kevés-fájlos, kézzel
-//  szerkesztett forrásból nő — egy .xcstrings katalógust Xcode string-
-//  extraction nélkül nehéz karban tartani. Ez a szótár ugyanazt az elvet
-//  követi (kulcs -> nyelvenkénti szöveg), csak egyszerű Swift kódban.
+//  Why not an Xcode String Catalog: the project grows from single-/few-file,
+//  hand-edited sources — an .xcstrings catalog is hard to maintain without
+//  Xcode string extraction. This dictionary follows the same principle
+//  (key -> text per language), just in plain Swift code.
 //
-//  LEFEDETTSÉG: a fő navigáció, gombok, HUD felirat, szegmens- és
-//  sorozatválasztó, statisztika címkék le vannak fordítva. A konfigurátor
-//  mezőinek részletes súgó szövegei (ConfigSchema) még csak magyarul
-//  vannak — ha kell, ugyanezzel a mintával bővíthető.
+//  COVERAGE: main navigation, buttons, HUD labels, segment and
+//  series pickers, and statistics labels are translated. The configurator
+//  fields' detailed help texts (ConfigSchema) are now bilingual as well
+//  (CfgText(hu:, en:) in FlySightConfig.swift).
 //
 
 import SwiftUI
@@ -23,13 +23,19 @@ enum AppLanguage: String, CaseIterable, Identifiable {
     var id: String { rawValue }
     var label: String { self == .hu ? "Magyar" : "English" }
     var flag: String { self == .hu ? "🇭🇺" : "🇬🇧" }
+
+    /// Language used until the user picks one in Settings: Hungarian if it is
+    /// the phone's preferred language, English otherwise.
+    static var systemDefault: AppLanguage {
+        Locale.preferredLanguages.first?.hasPrefix("hu") == true ? .hu : .en
+    }
 }
 
-/// Kulcs -> [nyelv: szöveg]. Ha egy kulcs vagy nyelv hiányzik, a kulcs
-/// szövege jelenik meg — így sosem tűnik el felirat, csak nem fordított.
+/// Key -> [language: text]. If a key or language is missing, the key's
+/// text is shown — so a label never disappears, it's just untranslated.
 private let translations: [String: [String: String]] = [
 
-    // Fülek / navigáció
+    // Tabs / navigation
     "tab.hud":      ["hu": "HUD",       "en": "HUD"],
     "tab.analysis": ["hu": "Elemzés",   "en": "Analysis"],
     "tab.logbook":  ["hu": "Napló",     "en": "Logbook"],
@@ -44,7 +50,7 @@ private let translations: [String: [String: String]] = [
     "nav.configRaw": ["hu": "CONFIG.TXT",           "en": "CONFIG.TXT"],
     "nav.rename":    ["hu": "Átnevezés",            "en": "Rename"],
 
-    // Kapcsolat
+    // Connection
     "conn.title":       ["hu": "Kapcsolat",              "en": "Connection"],
     "conn.connect":     ["hu": "Csatlakozás",            "en": "Connect"],
     "conn.disconnect":  ["hu": "Bontás",                 "en": "Disconnect"],
@@ -89,7 +95,7 @@ private let translations: [String: [String: String]] = [
     "altref.agl":       ["hu": "Talaj felett",  "en": "Above ground"],
     "altref.msl":       ["hu": "Tengerszint",   "en": "Sea level"],
 
-    // Fázisok
+    // Phases
     "phase.ground":     ["hu": "Földön",        "en": "Ground"],
     "phase.climb":      ["hu": "Emelkedés",     "en": "Climb"],
     "phase.jumpRun":     ["hu": "Jump run",      "en": "Jump run"],
@@ -98,7 +104,7 @@ private let translations: [String: [String: String]] = [
     "phase.canopy":     ["hu": "Ernyő alatt",   "en": "Under canopy"],
     "phase.landing":    ["hu": "Leszállás",     "en": "Landing"],
 
-    // Szegmensek (gyorsválasztó chipek)
+    // Segments (quick-select chips)
     "segment.whole":       ["hu": "Ugrás",     "en": "Jump"],
     "segment.freefall":    ["hu": "Esés",      "en": "Freefall"],
     "segment.opening":     ["hu": "Nyitás",    "en": "Opening"],
@@ -106,14 +112,14 @@ private let translations: [String: [String: String]] = [
     "segment.landing":     ["hu": "Leszállás", "en": "Landing"],
     "segment.everything":  ["hu": "Minden",    "en": "Everything"],
 
-    // Sorozatválasztó (a görbén megjelenő adatok)
+    // Series picker (data shown on the chart)
     "series.altitude":   ["hu": "Magasság",       "en": "Altitude"],
     "series.vertical":   ["hu": "Függőleges",      "en": "Vertical"],
     "series.horizontal": ["hu": "Vízszintes",      "en": "Horizontal"],
     "series.glide":      ["hu": "Siklószám",       "en": "Glide ratio"],
     "series.distance":   ["hu": "Táv",             "en": "Distance"],
 
-    // Elemzés fül
+    // Analysis tab
     "analysis.pickTrack":     ["hu": "Válassz ugrást",           "en": "Choose a jump"],
     "analysis.switch":        ["hu": "Váltás",                    "en": "Switch"],
     "analysis.noTrack":       ["hu": "Nincs betöltött ugrás — válassz fent egyet.",
@@ -143,14 +149,14 @@ private let translations: [String: [String: String]] = [
     "stat.straightLine":  ["hu": "Légvonal",          "en": "Straight line"],
     "stat.pathLength":    ["hu": "Útvonal",           "en": "Path length"],
 
-    // Napló fül
+    // Logbook tab
     "logbook.title":     ["hu": "Napló",                                 "en": "Logbook"],
     "logbook.storage":   ["hu": "Tárhely",                               "en": "Storage"],
     "logbook.keptOnPhone": ["hu": "a fájlok a telefon memóriájában maradnak",
                              "en": "files stay on this phone"],
     "logbook.delete":    ["hu": "Törlés",                                "en": "Delete"],
 
-    // Konfigurátor
+    // Configurator
     "config.title":         ["hu": "Konfiguráció",                       "en": "Configuration"],
     "config.source":        ["hu": "Forrás",                             "en": "Source"],
     "config.modified":      ["hu": "módosítva",                          "en": "modified"],
@@ -172,10 +178,10 @@ private let translations: [String: [String: String]] = [
     "config.fileNumber":   ["hu": "Fájl száma", "en": "File number"],
     "config.signal":       ["hu": "Jelzés", "en": "Signal"],
 
-    // Általános
+    // General
     "generic.save": ["hu": "Mentés", "en": "Save"],
 
-    // Nyelv
+    // Language
     "settings.language":   ["hu": "Nyelv", "en": "Language"],
 ]
 
@@ -183,8 +189,8 @@ func loc(_ key: String, _ lang: String) -> String {
     translations[key]?[lang] ?? translations[key]?["en"] ?? key
 }
 
-/// Kényelmi nézet: nyelvválasztó szegmentált vezérlő. Bárhová beilleszthető,
-/// ahol @AppStorage("app_language") elérhető.
+/// Convenience view: segmented language picker. Can be dropped in anywhere
+/// @AppStorage("app_language") is available.
 struct LanguagePicker: View {
     @Binding var lang: String
     var body: some View {

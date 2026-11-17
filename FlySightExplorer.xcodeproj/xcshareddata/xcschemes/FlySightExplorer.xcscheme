@@ -15,9 +15,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "9B66A625302B978100B0C647"
-               BuildableName = "FlysightExplorer_ios.app"
-               BlueprintName = "FlysightExplorer_ios"
-               ReferencedContainer = "container:FlysightExplorer_ios.xcodeproj">
+               BuildableName = "FlySightExplorer.app"
+               BlueprintName = "FlySightExplorer"
+               ReferencedContainer = "container:FlySightExplorer.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -34,9 +34,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "9B66A647302B978100B0C647"
-               BuildableName = "FlysightExplorer_iosTests.xctest"
-               BlueprintName = "FlysightExplorer_iosTests"
-               ReferencedContainer = "container:FlysightExplorer_ios.xcodeproj">
+               BuildableName = "FlySightExplorerTests.xctest"
+               BlueprintName = "FlySightExplorerTests"
+               ReferencedContainer = "container:FlySightExplorer.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
@@ -56,9 +56,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "9B66A625302B978100B0C647"
-            BuildableName = "FlysightExplorer_ios.app"
-            BlueprintName = "FlysightExplorer_ios"
-            ReferencedContainer = "container:FlysightExplorer_ios.xcodeproj">
+            BuildableName = "FlySightExplorer.app"
+            BlueprintName = "FlySightExplorer"
+            ReferencedContainer = "container:FlySightExplorer.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -73,9 +73,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "9B66A625302B978100B0C647"
-            BuildableName = "FlysightExplorer_ios.app"
-            BlueprintName = "FlysightExplorer_ios"
-            ReferencedContainer = "container:FlysightExplorer_ios.xcodeproj">
+            BuildableName = "FlySightExplorer.app"
+            BlueprintName = "FlySightExplorer"
+            ReferencedContainer = "container:FlySightExplorer.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

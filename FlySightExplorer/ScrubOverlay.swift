@@ -1,28 +1,28 @@
 //
-//  ScrubOverlay.swift — vízszintes csúszkáltatás görgethető listában
+//  ScrubOverlay.swift — horizontal scrubbing inside a scrollable list
 //
-//  A SwiftUI gesztusai erre nem alkalmasak: a `gesture`, a `simultaneousGesture`
-//  és a `LongPressGesture.sequenced` is lefogja az érintést már a lenyomásnál,
-//  és onnantól a ScrollView nem görget.
+//  SwiftUI gestures can't handle this: `gesture`, `simultaneousGesture`
+//  and `LongPressGesture.sequenced` all capture the touch as soon as it lands,
+//  and from then on the ScrollView won't scroll.
 //
-//  UIKit-ben viszont pontosan megoldható:
-//    - `shouldRecognizeSimultaneouslyWith → true`, tehát a ScrollView pan
-//      gesztusa NEM sérül, ugyanakkor mi is megkapjuk az eseményeket,
-//    - az első érdemi elmozdulásból eldöntjük az irányt: ha függőleges, magunkat
-//      lemondjuk (isEnabled ki/be), és a mozdulat tisztán a görgetésé marad.
+//  In UIKit, however, it can be solved precisely:
+//    - `shouldRecognizeSimultaneouslyWith → true`, so the ScrollView's pan
+//      gesture is NOT broken, while we still receive the events too,
+//    - we decide the direction from the first meaningful movement: if vertical,
+//      we cancel ourselves (isEnabled off/on) and the motion belongs purely to scrolling.
 //
-//  Így a charton vízszintesen csúszkálni lehet, fel/le pedig görgetni.
+//  This way you can scrub horizontally on the chart and scroll up/down.
 //
 
 import SwiftUI
 import UIKit
 
 struct ScrubOverlay: UIViewRepresentable {
-    /// Az ujj vízszintes pozíciója a nézet koordinátáiban.
+    /// The finger's horizontal position in the view's coordinates.
     var onScrub: (CGFloat) -> Void
-    /// Akkor hívjuk, amikor egy valódi csúszkáltatás elindul (pl. lejátszás stop).
+    /// Called when a real scrub begins (e.g. to stop playback).
     var onBegan: () -> Void = {}
-    /// Koppintás — a kurzort azonnal odahelyezzük.
+    /// Tap — the cursor is placed there immediately.
     var onTap: (CGFloat) -> Void
 
     func makeUIView(context: Context) -> UIView {
@@ -59,11 +59,11 @@ struct ScrubOverlay: UIViewRepresentable {
         var onBegan: () -> Void
         var onTap: (CGFloat) -> Void
 
-        /// Eldőlt-e már az aktuális mozdulat iránya.
+        /// Whether the current motion's direction has been decided yet.
         private var decided = false
-        /// Függőleges mozdulat → a görgetésnek engedjük át.
+        /// Vertical motion → handed over to scrolling.
         private var isVertical = false
-        /// Amelyik ScrollView-t a csúszkáltatás idejére kikapcsoltuk.
+        /// The ScrollView we disabled for the duration of the scrub.
         private weak var lockedScrollView: UIScrollView?
 
         init(onScrub: @escaping (CGFloat) -> Void,
@@ -84,20 +84,20 @@ struct ScrubOverlay: UIViewRepresentable {
             case .changed:
                 if !decided {
                     let t = g.translation(in: view)
-                    // Megvárjuk, míg értelmezhető az irány.
+                    // Wait until the direction can be determined.
                     guard abs(t.x) + abs(t.y) > 6 else { return }
                     decided = true
                     isVertical = abs(t.y) > abs(t.x)
                     if isVertical {
-                        // Lemondjuk magunkat: a ki/bekapcsolás megszakítja ezt
-                        // a felismerést, a görgetés zavartalanul folytatódik.
+                        // Cancel ourselves: toggling off/on aborts this
+                        // recognition, and scrolling continues undisturbed.
                         g.isEnabled = false
                         g.isEnabled = true
                         return
                     }
-                    // Vízszintes mozdulat: a mozdulat végéig LEZÁRJUK a
-                    // görgetést, hogy a kijelző ne csúszkáljon fel/le, amíg a
-                    // kurzort húzod. Egyszerre csak egy dolog történjen.
+                    // Horizontal motion: we LOCK scrolling until the motion
+                    // ends, so the screen doesn't slide up/down while you're
+                    // dragging the cursor. Only one thing should happen at a time.
                     lockScroll(around: view)
                     onBegan()
                 }
@@ -119,9 +119,9 @@ struct ScrubOverlay: UIViewRepresentable {
             onTap(g.location(in: view).x)
         }
 
-        /// Megkeresi a befoglaló ScrollView-t, és a csúszkáltatás idejére
-        /// kikapcsolja. A `isScrollEnabled = false` a folyamatban lévő görgetést
-        /// is azonnal megszakítja, tehát a kijelző megáll ott, ahol volt.
+        /// Finds the enclosing ScrollView and disables it for the duration
+        /// of the scrub. `isScrollEnabled = false` also stops any scrolling in
+        /// progress immediately, so the screen stays where it was.
         private func lockScroll(around view: UIView) {
             var v: UIView? = view.superview
             while let cur = v {
@@ -141,7 +141,7 @@ struct ScrubOverlay: UIViewRepresentable {
             lockedScrollView = nil
         }
 
-        /// EZ a kulcs: nem zárjuk ki a ScrollView pan gesztusát.
+        /// THIS is the key: we don't exclude the ScrollView's pan gesture.
         func gestureRecognizer(_ g: UIGestureRecognizer,
                                shouldRecognizeSimultaneouslyWith other: UIGestureRecognizer)
         -> Bool { true }

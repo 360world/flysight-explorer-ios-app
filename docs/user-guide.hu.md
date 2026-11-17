@@ -76,6 +76,8 @@ Az alsó sávban öt fül van: **HUD**, **Elemzés**, **Napló**, **Beállítás
 
 <img src="images/settings.png" alt="Beállítás fül" width="280">
 
+- Nyelvválasztó (English / Magyar) legfelül. Amíg nem választasz, az app a
+  telefon nyelvét követi.
 - A teljes `CONFIG.TXT`: 9 csoport, 31 mező.
 - Minden mezőhöz magyarázat és mértékegység.
 - A riasztási magasságok az ugróhely szintjéhez mérve: ha az ugróhely 125
@@ -89,4 +91,4 @@ Az alsó sávban öt fül van: **HUD**, **Elemzés**, **Napló**, **Beállítás
 ## Technikai részletek
 
 A Bluetooth-protokoll, a párosítás és keepalive, valamint a fejlesztés közben
-talált hibák leírása: [ARCHITEKTURA.md](../ARCHITEKTURA.md).
+talált hibák leírása: [technikai dokumentáció](architecture.hu.md).
