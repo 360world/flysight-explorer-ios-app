@@ -89,4 +89,4 @@ Az alsó sávban öt fül van: **HUD**, **Elemzés**, **Napló**, **Beállítás
 ## Technikai részletek
 
 A Bluetooth-protokoll, a párosítás és keepalive, valamint a fejlesztés közben
-talált hibák leírása: [ARCHITEKTURA.md](../ARCHITEKTURA.md).
+talált hibák leírása: [technikai dokumentáció](architecture.hu.md).

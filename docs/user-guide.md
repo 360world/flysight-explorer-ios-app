@@ -89,5 +89,4 @@ The tab bar has five tabs: **HUD**, **Analysis**, **Logbook**, **Settings**,
 ## Technical details
 
 The Bluetooth protocol, pairing and keepalive, and the bugs found during
-development are described in [ARCHITEKTURA.md](../ARCHITEKTURA.md)
-(Hungarian).
+development are described in the [technical documentation](architecture.md).

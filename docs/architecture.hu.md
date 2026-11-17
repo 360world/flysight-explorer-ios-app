@@ -1,3 +1,5 @@
+[English](architecture.md) | **Magyar**
+
 # FlySight Explorer — technikai dokumentáció
 
 iOS alkalmazás a FlySight 2 GPS-loggerhez: fájlletöltés BLE-n, ugráselemzés,
@@ -239,7 +241,7 @@ Mindegyikhez a szolgáltatás- és karakterisztika-lista naplóba írása kell.
 
 ## 10. Flutter migráció — mérési eredmény
 
-A `flutter_spike/` egy eldobható próba: kiszolgálja-e a `flutter_blue_plus`
+A `flutter_spike/` (nem része ennek a repónak) egy eldobható próba volt: kiszolgálja-e a `flutter_blue_plus`
 hibátlanul ezt a protokollt.
 
 **iOS, 464 548 bájt, 3 futás:** mindhárom bájtra pontos (1920 csomag,

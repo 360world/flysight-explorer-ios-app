@@ -14,7 +14,7 @@ kártyaolvasó és számítógép nélkül.*
 ## Documentation
 
 - **User guide:** [English](docs/user-guide.md) · [Magyar](docs/user-guide.hu.md)
-- **Technical overview** (Hungarian): [ARCHITEKTURA.md](ARCHITEKTURA.md)
+- **Technical documentation:** [English](docs/architecture.md) · [Magyar](docs/architecture.hu.md)
 
 ## Building
 
