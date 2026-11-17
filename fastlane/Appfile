@@ -1,0 +1,3 @@
+# Official App Store identity. Not secret.
+app_identifier("com.world360.flysightexplorer")
+team_id("94J6N6TEVZ")

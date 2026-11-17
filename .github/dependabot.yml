@@ -1,0 +1,19 @@
+version: 2
+updates:
+  # Keeps the (SHA-pinned) actions in .github/workflows up to date.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]
+
+  # fastlane and its Ruby dependencies used by the release workflow.
+  - package-ecosystem: bundler
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      ruby:
+        patterns: ["*"]
