@@ -1,7 +1,7 @@
-# Changes to CI, release automation and signing config need maintainer review.
-/.github/      @pAlkesz
-/fastlane/     @pAlkesz
-/Config/       @pAlkesz
-/Gemfile       @pAlkesz
-/Gemfile.lock  @pAlkesz
-/FlysightExplorer_ios.xcodeproj/  @pAlkesz
+# Every change to this repository needs review from a code owner.
+# Combined with the "main" ruleset (Require review from Code Owners), no PR
+# can be merged without this approval.
+#
+# The last matching pattern wins, so put more specific paths BELOW this line
+# if other people should own parts of the repo later.
+*  @pAlkesz
