@@ -53,11 +53,14 @@ jobs:
           bundler-cache: true
 
       - name: Trust github.com SSH host key (for the match repo)
+        env:
+          # Authenticated request: anonymous API calls from shared runners
+          # hit GitHub's per-IP rate limit and fail with 403.
+          GH_TOKEN: ${{ github.token }}
         run: |
           mkdir -p ~/.ssh
-          curl -fsSL https://api.github.com/meta \
-            | python3 -I -c 'import json,sys; [print("github.com "+k) for k in json.load(sys.stdin)["ssh_keys"]]' \
-            >> ~/.ssh/known_hosts
+          gh api meta --jq '.ssh_keys[] | "github.com " + .' >> ~/.ssh/known_hosts
+          test -s ~/.ssh/known_hosts
 
       - name: Build and upload to TestFlight
         env:
