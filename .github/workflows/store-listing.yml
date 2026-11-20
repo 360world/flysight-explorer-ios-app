@@ -1,0 +1,48 @@
+name: Update App Store listing
+
+# Uploads the description, What's New, URLs (fastlane/metadata) and the
+# screenshots (fastlane/screenshots) for one App Store version.
+# Run it by hand: Actions → "Update App Store listing" → Run workflow.
+#
+# It never uploads a build and never submits for review. It uses the same
+# `app-store` environment as the release workflow (for the App Store Connect
+# API key), so that environment must allow runs from `main` as well as v* tags.
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "App Store version to update, e.g. 1.0.0 (must match the build's version)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: store-listing
+  cancel-in-progress: false
+
+jobs:
+  upload:
+    name: Upload texts & screenshots
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: app-store
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: ruby/setup-ruby@b3aaceaef7e0ee231b499e7b5f49c03fc1d32199 # v1.338.0
+        with:
+          bundler-cache: true
+
+      - name: Upload to App Store Connect
+        env:
+          LISTING_VERSION: ${{ inputs.version }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8_BASE64: ${{ secrets.ASC_KEY_P8_BASE64 }}
+          FASTLANE_SKIP_UPDATE_CHECK: "1"
+          FASTLANE_HIDE_CHANGELOG: "1"
+        run: bundle exec fastlane upload_listing

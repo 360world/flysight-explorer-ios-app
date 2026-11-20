@@ -4,7 +4,9 @@ name: Release
 #
 # 1. testflight      builds, signs and uploads to TestFlight. All signing secrets
 #                    live in the protected `app-store` environment, which only
-#                    accepts v* tags — pull requests and forks never reach them.
+#                    accepts v* tags and `main` (for the listing workflow) and
+#                    needs a maintainer's approval — pull requests and forks
+#                    never reach them.
 # 2. github-release  only after a successful upload: creates the GitHub Release
 #                    with notes generated from the PRs merged since the last
 #                    release (categories: .github/release.yml). This job has no

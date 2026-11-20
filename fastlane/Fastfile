@@ -6,11 +6,20 @@
 #                            stores them encrypted in the match repo.
 #   fastlane release         (run by .github/workflows/release.yml) builds a
 #                            signed archive and uploads it to TestFlight.
+#   fastlane upload_listing  (run by .github/workflows/store-listing.yml)
+#                            uploads the texts in fastlane/metadata and the
+#                            images in fastlane/screenshots. No build, no review
+#                            submission.
 #
 # Required environment variables — see RELEASING.md:
 #   ASC_KEY_ID, ASC_ISSUER_ID, ASC_KEY_P8_BASE64   App Store Connect API key
 #   MATCH_GIT_URL, MATCH_PASSWORD                  encrypted signing repo
 #   MATCH_GIT_PRIVATE_KEY                          (CI only) read-only deploy key
+#   LISTING_VERSION                                (upload_listing) e.g. 1.0.0
+
+require "net/http"
+require "tmpdir"
+require "fileutils"
 
 default_platform(:ios)
 
@@ -99,5 +108,65 @@ platform :ios do
     header = prev.empty? ? "Version #{version}" : "Version #{version} — changes since #{prev}:"
     notes = ([header] + subjects).join("\n")
     notes.length > 3900 ? notes[0, 3900] + "\n…" : notes
+  end
+
+  desc "Upload App Store texts and screenshots (no build, no review submission)"
+  lane :upload_listing do
+    version = ENV["LISTING_VERSION"].to_s.sub(/\Av/, "")
+    UI.user_error!("LISTING_VERSION (e.g. 1.0.0) is required") unless version.match?(/\A\d+(\.\d+){1,2}\z/)
+
+    base = File.expand_path(FastlaneCore::FastlaneFolder.path)
+    metadata = File.join(base, "metadata")
+    screenshots = File.join(base, "screenshots")
+
+    # App Review rejects a listing whose privacy policy / support page is down,
+    # so fail here instead of uploading a broken link.
+    Dir[File.join(metadata, "*", "{privacy,support}_url.txt")].each do |f|
+      url = File.read(f).strip
+      check_url!(url, File.basename(File.dirname(f)))
+    end
+
+    api_key = asc_api_key # also authenticates Spaceship for the lookup below
+    app = Spaceship::ConnectAPI::App.find(APP_ID)
+    UI.user_error!("No app with bundle ID #{APP_ID} in App Store Connect") unless app
+
+    # "What's New" doesn't exist for an app's first version; App Store Connect
+    # rejects it until a version has been released.
+    if app.get_live_app_store_version.nil?
+      UI.important("No version is live yet — skipping release_notes.txt (What's New)")
+      tmp = Dir.mktmpdir("metadata")
+      FileUtils.cp_r(File.join(metadata, "."), tmp)
+      Dir[File.join(tmp, "*", "release_notes.txt")].each { |f| File.delete(f) }
+      metadata = tmp
+    end
+
+    deliver(
+      api_key: api_key,
+      app_identifier: APP_ID,
+      app_version: version,
+      metadata_path: metadata,
+      screenshots_path: screenshots,
+      skip_binary_upload: true,
+      overwrite_screenshots: true,
+      submit_for_review: false,
+      run_precheck_before_submit: false,
+      force: true # no interactive HTML preview
+    )
+  end
+
+  def check_url!(url, locale)
+    uri = URI(url)
+    3.times do
+      res = Net::HTTP.get_response(uri)
+      return if res.is_a?(Net::HTTPSuccess)
+      if res.is_a?(Net::HTTPRedirection)
+        uri = URI.join(uri, res["location"])
+        next
+      end
+      UI.user_error!("#{locale}: #{url} returned HTTP #{res.code}")
+    end
+    UI.user_error!("#{locale}: #{url} redirects too often")
+  rescue SocketError, Errno::ECONNREFUSED, Net::OpenTimeout => e
+    UI.user_error!("#{locale}: #{url} is not reachable (#{e.class})")
   end
 end

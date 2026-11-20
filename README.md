@@ -15,6 +15,7 @@ kártyaolvasó és számítógép nélkül.*
 
 - **User guide:** [English](docs/user-guide.md) · [Magyar](docs/user-guide.hu.md)
 - **Technical documentation:** [English](docs/architecture.md) · [Magyar](docs/architecture.hu.md)
+- **Privacy policy:** [English](docs/privacy-policy.md) · [Magyar](docs/privacy-policy.hu.md)
 
 ## Building
 

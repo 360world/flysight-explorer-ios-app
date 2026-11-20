@@ -1,0 +1,40 @@
+Your FlySight 2, without the card reader.
+
+FlySight Explorer connects to your FlySight 2 GPS logger over Bluetooth. Download your jumps, analyse them, replay them on a big, readable HUD and change the device's settings — all from your phone, right at the dropzone.
+
+DOWNLOAD OVER BLUETOOTH
+• Browse the files on the FlySight's SD card and download a track with one tap
+• Downloaded recordings are marked, so you never download the same one twice
+• Works with several devices: give each one a nickname, and the app reconnects to the one you used last
+
+ANALYSE EVERY JUMP
+• Map of your flight path, coloured by phase: climb, freefall, deployment, canopy, landing
+• Exit, deployment and landing are detected automatically
+• Charts for speed, glide ratio, altitude and distance, with live values under the cursor
+• Jump to freefall, opening, canopy or landing with one tap, or select any section yourself
+• Statistics for the selected section: duration, altitude lost, speeds and glide ratio
+
+REPLAY ON THE HUD
+• Large numbers you can read at a glance
+• Four layouts: Altitude, Glide, Edge bar and Dial
+• Playback at 1–10× speed with a mini map
+• Altitude above ground or above sea level
+
+CONFIGURE YOUR FLYSIGHT
+• Edit the complete CONFIG.TXT: GPS, tones, speech, thresholds, alarms and more
+• Every setting explained, with its unit
+• Alarm altitudes shown relative to your dropzone's elevation
+• Load the configuration from the device, edit it and upload it back
+
+YOUR LOGBOOK
+• All downloaded jumps in one place, on your phone
+• Import tracks from the Files app, iCloud Drive or other apps
+• Rename, delete or share the raw CSV of any jump
+• Built-in wingsuit and tracking samples to try the app without a device
+
+No account, no ads, no tracking. Your jumps stay on your phone.
+
+Available in English and Hungarian. Open source: github.com/360world/flysight-explorer-ios-app
+
+Requires a FlySight 2 for Bluetooth features. CSV files from FlySight 1 and FlySight 2 can be imported.
+FlySight is a trademark of its respective owner. This app is not affiliated with or endorsed by the FlySight project.
