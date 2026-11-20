@@ -99,6 +99,13 @@ final class AppModel: ObservableObject {
         loadSample(.wingsuit, lang)
         config.load(FlySightConfig.defaultWingsuitText(),
                     name: FlySightConfig.defaultSourceName)
+        #if DEBUG
+        if let s = ScreenshotMode.secondsAfterExit, let t = track {
+            let exit = t.samples[t.exitIdx ?? 0].t
+            cursor = min(max(t.index(atTime: exit + s), lo), hi)
+            showCursor()
+        }
+        #endif
     }
 
     /// The current language — the same key the views read with @AppStorage.
@@ -1808,26 +1815,60 @@ struct DiagnosticsView: View {
 
 // MARK: - Root
 
+#if DEBUG
+/// Launch arguments for producing App Store screenshots. Debug builds only —
+/// none of this is compiled into the App Store build.
+///
+///   -screenshotTab 0…4             open this tab (0 = HUD … 4 = Device)
+///   -screenshotSecondsAfterExit N  put the playback cursor N s after exit
+///   -screenshotHideStatusBar YES   hide the status bar
+///
+/// Stored settings can be overridden the same way, e.g. `-app_language en`
+/// or `-hud_layout <raw value>`.
+enum ScreenshotMode {
+    private static let d = UserDefaults.standard
+    static var tab: Int { d.integer(forKey: "screenshotTab") }
+    static var secondsAfterExit: Double? {
+        d.object(forKey: "screenshotSecondsAfterExit") == nil
+            ? nil : d.double(forKey: "screenshotSecondsAfterExit")
+    }
+    static var hideStatusBar: Bool { d.bool(forKey: "screenshotHideStatusBar") }
+}
+#endif
+
 struct ContentView: View {
     @StateObject private var m = AppModel()
     @AppStorage("app_language") private var appLang = AppLanguage.systemDefault.rawValue
+    #if DEBUG
+    @State private var tab = ScreenshotMode.tab
+    private let hideStatusBar = ScreenshotMode.hideStatusBar
+    #else
+    @State private var tab = 0
+    private let hideStatusBar = false
+    #endif
 
     var body: some View {
-        TabView {
+        TabView(selection: $tab) {
             HUDTab(m: m, ble: m.ble)
                 .tabItem { Label(loc("tab.hud", appLang), systemImage: "gauge.medium") }
+                .tag(0)
             AnalysisTab(m: m, logbook: m.logbook)
                 .tabItem { Label(loc("tab.analysis", appLang), systemImage: "chart.xyaxis.line") }
+                .tag(1)
             LogbookTab(m: m, logbook: m.logbook)
                 .tabItem { Label(loc("tab.logbook", appLang), systemImage: "book.closed") }
+                .tag(2)
             ConfigTab(m: m, config: m.config, ble: m.ble)
                 .tabItem { Label(loc("tab.config", appLang), systemImage: "slider.horizontal.3") }
+                .tag(3)
             FlySightTab(m: m, ble: m.ble, logbook: m.logbook)
                 .tabItem {
                     Label(loc("tab.device", appLang),
                           systemImage: "antenna.radiowaves.left.and.right")
                 }
+                .tag(4)
         }
+        .statusBarHidden(hideStatusBar)
         .preferredColorScheme(.dark)
         .overlay(alignment: .top) {
             if let t = m.toast {
