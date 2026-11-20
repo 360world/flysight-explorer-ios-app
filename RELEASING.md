@@ -54,3 +54,28 @@ same environment variables exported (except `MATCH_GIT_PRIVATE_KEY`):
 bundle install
 bundle exec fastlane setup_signing
 ```
+
+## App Store screenshots
+
+A Debug build reads a few launch arguments (`ScreenshotMode` in
+`FlySightExplorer/ContentView.swift`; not compiled into Release builds):
+
+| Argument | Effect |
+|---|---|
+| `-screenshotTab 0…4` | open a tab (0 HUD, 1 Analysis, 2 Logbook, 3 Settings, 4 Device) |
+| `-screenshotSecondsAfterExit N` | put the playback cursor N seconds after exit |
+| `-screenshotHideStatusBar YES` | hide the status bar |
+| `-app_language en` / `hu`, `-hud_layout dial` … | override stored settings |
+
+Use an iPhone 17 Pro Max (6.9", 1320 × 2868) and an iPad Pro 13-inch
+(2064 × 2752) simulator, install a Debug build, then for each shot:
+
+```bash
+xcrun simctl launch <udid> com.world360.flysightexplorer \
+  -AppleLanguages "(en)" -app_language en -screenshotHideStatusBar YES \
+  -screenshotTab 0 -screenshotSecondsAfterExit 70 -hud_layout glideFirst
+xcrun simctl io <udid> screenshot 1-hud-glide.png
+```
+
+The 1.0 set used: HUD Glide at 70 s, Analysis at 70 s, HUD Dial at 110 s,
+Settings, Logbook — all with the built-in wingsuit sample.
