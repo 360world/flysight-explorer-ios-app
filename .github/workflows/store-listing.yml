@@ -4,9 +4,9 @@ name: Update App Store listing
 # screenshots (fastlane/screenshots) for one App Store version.
 # Run it by hand: Actions → "Update App Store listing" → Run workflow.
 #
-# It never uploads a build and never submits for review. It uses its own
-# `app-store-listing` environment, which holds only the App Store Connect API
-# key — no signing secrets.
+# It never uploads a build and never submits for review. It uses the same
+# `app-store` environment as the release workflow (for the App Store Connect
+# API key), so that environment must allow runs from `main` as well as v* tags.
 on:
   workflow_dispatch:
     inputs:
@@ -27,7 +27,7 @@ jobs:
     name: Upload texts & screenshots
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    environment: app-store-listing
+    environment: app-store
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:

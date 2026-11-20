@@ -108,16 +108,17 @@ To update the listing:
    every new version.
 2. Actions → **Update App Store listing** → **Run workflow**, and enter the
    version (e.g. `1.0.1`, same as the tag without `v`).
-3. Approve the `app-store-listing` deployment.
+3. Approve the `app-store` deployment.
 
 The workflow first checks that the privacy policy and support URLs load, then
 creates or updates that version in App Store Connect with the texts and
 screenshots. It replaces all screenshots for each language. It never uploads
 a build and never submits for review; you still do that in App Store Connect.
 
-The `app-store-listing` environment holds only the App Store Connect API key
-(`ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_P8_BASE64`) and only accepts runs
-from `main`.
+It uses the `app-store` environment (only `ASC_KEY_ID`, `ASC_ISSUER_ID` and
+`ASC_KEY_P8_BASE64`; the signing secrets are not passed to it). Because the
+workflow runs from `main`, the environment's deployment rules allow the branch
+`main` in addition to `v*` tags.
 
 ## Privacy policy
 
