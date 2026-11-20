@@ -1,0 +1,40 @@
+A FlySight 2-d, kártyaolvasó nélkül.
+
+A FlySight Explorer Bluetooth-on kapcsolódik a FlySight 2 GPS-loggeredhez. Töltsd le az ugrásaidat, elemezd őket, játszd vissza egy nagy, jól olvasható HUD-on, és állítsd be az eszközt — mindezt a telefonodról, akár az ugróhelyen.
+
+LETÖLTÉS BLUETOOTH-ON
+• Böngészd a FlySight SD-kártyáját, és tölts le egy trackot egyetlen koppintással
+• A már letöltött felvételek jelölve vannak, így semmit nem töltesz le kétszer
+• Több eszközt is kezel: adj mindegyiknek becenevet, az app a legutóbb használthoz kapcsolódik
+
+MINDEN UGRÁS ELEMZÉSE
+• Térkép a nyomvonallal, fázisonként színezve: emelkedés, esés, nyitás, ernyő, leszállás
+• Az exitet, a nyitást és a leszállást az app automatikusan felismeri
+• Grafikonok a sebességről, siklószámról, magasságról és távról, a kurzor alatt élő értékekkel
+• Egy koppintással ugorhatsz az esésre, nyitásra, ernyőre vagy leszállásra, vagy kijelölhetsz bármilyen szakaszt
+• Statisztika a kijelölt szakaszra: időtartam, magasságvesztés, sebességek és siklószám
+
+VISSZAJÁTSZÁS A HUD-ON
+• Nagy, egy pillantással olvasható számok
+• Négy elrendezés: Magasság, Glide, Peremsáv és Ív
+• Lejátszás 1–10× sebességgel, kistérképpel
+• Magasság talaj felett vagy tengerszinten
+
+A FLYSIGHT BEÁLLÍTÁSA
+• A teljes CONFIG.TXT szerkesztése: GPS, hangok, bemondás, küszöbök, riasztások és még sok más
+• Minden beállításhoz magyarázat és mértékegység
+• A riasztási magasságok az ugróhely szintjéhez mérve
+• Töltsd be a konfigurációt az eszközről, szerkeszd, és töltsd vissza
+
+NAPLÓ
+• Minden letöltött ugrás egy helyen, a telefonodon
+• Trackek importálása a Fájlok appból, iCloud Drive-ról vagy más appokból
+• Bármelyik ugrás átnevezhető, törölhető, a nyers CSV megosztható
+• Beépített wingsuit és tracking minták, hogy eszköz nélkül is kipróbálhasd
+
+Nincs fiók, nincs reklám, nincs követés. Az ugrásaid a telefonodon maradnak.
+
+Magyarul és angolul. Nyílt forráskódú: github.com/360world/flysight-explorer-ios-app
+
+A Bluetooth-funkciókhoz FlySight 2 szükséges. FlySight 1 és FlySight 2 CSV-fájlok importálhatók.
+A FlySight a jogtulajdonosának védjegye. Ez az app nem áll kapcsolatban a FlySight projekttel, és azt nem is támogatja hivatalosan.

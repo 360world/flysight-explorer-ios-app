@@ -79,3 +79,53 @@ xcrun simctl io <udid> screenshot 1-hud-glide.png
 
 The 1.0 set used: HUD Glide at 70 s, Analysis at 70 s, HUD Dial at 110 s,
 Settings, Logbook — all with the built-in wingsuit sample.
+
+Save the results into `fastlane/screenshots/<locale>/` (`en-US`, `hu`) with a
+device prefix, e.g. `iphone69-1-hud-glide.png`, `ipad13-1-hud-glide.png`.
+App Store Connect sorts them by file name and picks the device slot from the
+image size.
+
+## App Store listing (texts and screenshots)
+
+The listing lives in the repo and is uploaded by its own workflow,
+**Update App Store listing** (`.github/workflows/store-listing.yml`):
+
+```
+fastlane/metadata/<locale>/description.txt     App Store description
+fastlane/metadata/<locale>/release_notes.txt   What's New (skipped automatically
+                                               until the first version is live)
+fastlane/metadata/<locale>/privacy_url.txt     privacy policy URL
+fastlane/metadata/<locale>/support_url.txt     support URL
+fastlane/screenshots/<locale>/*.png            screenshots, iPhone 6.9" + iPad 13"
+```
+
+`<locale>` is `en-US` or `hu`. Fields without a file (keywords, subtitle,
+promotional text, …) are left as they are in App Store Connect.
+
+To update the listing:
+
+1. Change the files in a PR and merge it. Update `release_notes.txt` for
+   every new version.
+2. Actions → **Update App Store listing** → **Run workflow**, and enter the
+   version (e.g. `1.0.1`, same as the tag without `v`).
+3. Approve the `app-store-listing` deployment.
+
+The workflow first checks that the privacy policy and support URLs load, then
+creates or updates that version in App Store Connect with the texts and
+screenshots. It replaces all screenshots for each language. It never uploads
+a build and never submits for review; you still do that in App Store Connect.
+
+The `app-store-listing` environment holds only the App Store Connect API key
+(`ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_KEY_P8_BASE64`) and only accepts runs
+from `main`.
+
+## Privacy policy
+
+Hosted with GitHub Pages from the `docs/` folder on `main`:
+
+| Language | File | URL |
+|---|---|---|
+| English | `docs/privacy-policy.md` | https://360world.github.io/flysight-explorer-ios-app/privacy-policy.html |
+| Hungarian | `docs/privacy-policy.hu.md` | https://360world.github.io/flysight-explorer-ios-app/privacy-policy.hu.html |
+
+Changes go live a minute or two after they are merged into `main`.

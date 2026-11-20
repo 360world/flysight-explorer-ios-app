@@ -1,0 +1,7 @@
+First release of FlySight Explorer:
+• Download jumps from your FlySight 2 over Bluetooth
+• Map, charts and statistics for every jump
+• HUD replay with four layouts
+• Edit and upload your FlySight's configuration
+• Logbook with CSV import and sharing
+• English and Hungarian
