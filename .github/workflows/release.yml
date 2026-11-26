@@ -24,12 +24,12 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  XCODE_APP: /Applications/Xcode_26.6.app
+  XCODE_APP: /Applications/Xcode_27.1.app
 
 jobs:
   testflight:
     name: Build, sign & upload
-    runs-on: macos-26
+    runs-on: xcode-27 # preview image; macos-26 only has Xcode 26
     timeout-minutes: 60
     environment: app-store
     steps:
