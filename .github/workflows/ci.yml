@@ -34,7 +34,9 @@ jobs:
 
       - name: Pick simulator
         id: sim
-        run: echo "udid=$(python3 -I .github/scripts/pick-simulator.py)" >> "$GITHUB_OUTPUT"
+        run: |
+          udid=$(python3 -I .github/scripts/pick-simulator.py)
+          echo "udid=$udid" >> "$GITHUB_OUTPUT"
 
       - name: Build and run unit tests
         run: |

@@ -23,10 +23,16 @@ sdk = tuple(int(x) for x in subprocess.run(
 
 def version(runtime: str) -> tuple:
     # com.apple.CoreSimulator.SimRuntime.iOS-26-5 -> (26, 5)
+    # Device-specific runtimes carry a suffix, e.g. iOS-27-1-iPhone19-4 -> (27, 1)
     tail = runtime.rsplit(".", 1)[-1]
     if not tail.startswith("iOS-"):
         return ()
-    return tuple(int(x) for x in tail[4:].split("-"))
+    parts = []
+    for x in tail[4:].split("-"):
+        if not x.isdigit():
+            break
+        parts.append(int(x))
+    return tuple(parts)
 
 
 candidates = [
