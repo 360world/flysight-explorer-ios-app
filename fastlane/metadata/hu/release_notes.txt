@@ -1,7 +1,1 @@
-A FlySight Explorer első kiadása:
-• Ugrások letöltése a FlySight 2-ről Bluetooth-on
-• Térkép, grafikonok és statisztika minden ugráshoz
-• HUD-visszajátszás négy elrendezéssel
-• A FlySight konfigurációjának szerkesztése és feltöltése
-• Napló CSV-importtal és megosztással
-• Magyar és angol nyelv
+Új alkalmazásikon: a FlySight Explorer mostantól a FlySight logóját használja, így könnyebb megtalálni a Főképernyőn.
